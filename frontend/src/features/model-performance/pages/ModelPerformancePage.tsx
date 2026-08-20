@@ -31,7 +31,7 @@ import {
  * MODEL PERFORMANCE PAGE — layout + shared filters.
  *
  * Sections and their data sources:
- *  - ForecastContextBar  → see that component (station list broken today).
+ *  - ForecastContextBar  → see that component (live station list).
  *  - Evaluation View     → [DATA: STATIC-UI + USER-STATE] fixed header text;
  *                          the Tactical/Strategic toggle writes the shared
  *                          horizon (drives every child's API filtering).

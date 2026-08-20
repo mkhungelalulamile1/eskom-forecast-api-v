@@ -534,6 +534,32 @@ def test_validate_scenario_definitions_rejects_duplicate_scenario_id():
         validate_scenario_definitions(bad_definitions)
 
 
+def test_get_entities_json_from_local_gold():
+    """
+    GET /api/entities source: unique entity_ids from local gold parquet.
+    [DATA: DYNAMIC] — no hardcoded station names; the list is whatever
+    gold/{daily,monthly}/scenario_predictions.parquet (or predictions.parquet)
+    actually contains.
+    """
+    from ui import get_entities_json
+
+    config = Config()
+    entities = get_entities_json(config)
+
+    assert isinstance(entities, list)
+    assert len(entities) > 0, "Expected at least one station from local gold parquet"
+
+    ids = []
+    for entity in entities:
+        assert "id" in entity and "label" in entity
+        assert entity["id"]
+        assert entity["label"] == entity["id"]
+        ids.append(entity["id"])
+
+    assert ids == sorted(ids)
+    assert len(ids) == len(set(ids))
+
+
 @requires_azure_storage
 def test_scenario_predictions_json_shape():
     """

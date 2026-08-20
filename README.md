@@ -2,6 +2,8 @@
 
 FastAPI web app serving the coal burn/supply forecasting pipeline and dashboard, deployable on AKS. Single entry point: `main.py`.
 
+For a plain-English, element-by-element map of every Forecast and Model Performance card (live vs hardcoded, APIs, what engineers still owe), see [docs/DATA_SOURCE_AUDIT.md](docs/DATA_SOURCE_AUDIT.md).
+
 ## Local development
 
 No Azure credentials are required for basic local testing — when `AZURE_STORAGE_ACCOUNT_URL`/`AZURE_STORAGE_CONNECTION_STRING` aren't set, the app falls back to local disk (`data/bronze`, `models/`, `data/gold`, etc., relative to the working directory), generating mock Bronze data on first use.
@@ -19,7 +21,7 @@ The app starts on `http://localhost:8000`. Interactive API docs are at `http://l
 Useful routes to try:
 - `GET /healthz` — liveness check, always `{"status": "ok"}`
 - `GET /` — the dashboard (`frontend/index.html`)
-- `GET /api/forecast-data`, `/api/forecast-metrics`, `/api/scenario-data`, `/api/oot-history` — require real Azure Storage (no local fallback for these reads); expect a 500 with a clear error until Azure Storage env vars are set
+- `GET /api/forecast-data`, `/api/forecast-metrics`, `/api/scenario-data`, `/api/oot-history`, `/api/entities` — read Gold/metrics parquet (Azure Blob when `APP_MODE=production` + storage env vars; local `data/gold` / `data/metrics` in development). `/api/entities` is the Power Station dropdown list (unique `entity_id`s from those files)
 - `POST /api/run-forecast` with body `{"horizon": "daily"}` or `{"horizon": "monthly"}` — runs the pipeline against local mock data; needs a local weather cache or live network access to Open-Meteo for the weather step to succeed
 - `POST /api/ingest-bronze-data` — requires `SQL_SERVER_HOSTNAME`/`SQL_DATABASE_NAME` plus a working Azure AD credential (managed identity in AKS, or a service principal locally — see the Docker Compose section below); fails fast with a clear error if config is missing
 - `POST /api/refresh-weather-cache`

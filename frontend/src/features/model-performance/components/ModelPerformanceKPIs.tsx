@@ -39,9 +39,9 @@ interface ModelPerformanceKPIsProps {
  * [DATA: STATIC-UI] card labels/descriptions, icons, colors and the NRMSE
  * thresholds (≤25 Strong, ≤50 Review, else Attention).
  *
- * CAVEAT: when entityId is the mock default "entity_1" (or "all"), no
- * record matches → cards show "—"/"No data" even though the API call
- * succeeded. This is a filter-state issue, not a data issue.
+ * CAVEAT: when entityId is empty or "all", no record matches → cards
+ * show "—"/"No data" even though the API call succeeded. This is a
+ * filter-state issue, not a data issue.
  */
 const ModelPerformanceKPIs = ({
   horizon,
@@ -70,7 +70,7 @@ const ModelPerformanceKPIs = ({
   /*
    * [DATA: DYNAMIC] Client-side filter of the API records by station and
    * horizon (daily → backend horizon "tactical", monthly → "strategic").
-   * NOTE: entityId "all"/"entity_1" matches nothing here.
+   * NOTE: entityId "all" or empty matches nothing here.
    */
 
   const selectedMetrics: ModelMetricRecord[] =

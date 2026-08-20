@@ -55,11 +55,10 @@ interface ForecastContextValue {
  * selections, not fetched data. They drive which backend records the
  * services filter for.
  *
- * [DATA: MOCK] DEFAULT_ENTITY_ID = "entity_1" is a leftover mock id —
- * no real parquet entity is called "entity_1" (real ids are "Arnot",
- * "Kendal", ...). Until /api/entities exists (or this default is fixed),
- * the app boots with a station selection that matches NO records, so
- * every KPI/chart renders empty/zero on first load.
+ * [DATA: DYNAMIC] entityId starts empty and is snapped to the first
+ * live station once GET /api/entities (or the scenario-data fallback)
+ * returns. ForecastContextBar / WeatherIntelligence / ForecastInsights
+ * all perform that self-heal — no hardcoded station name.
  *
  * [DATA: STATIC-UI] the remaining defaults (daily/burn/actual) are
  * acceptable UI defaults that do exist in the backend data.
@@ -79,11 +78,10 @@ const DEFAULT_HORIZON: ForecastHorizon =
 const DEFAULT_METRIC: ForecastMetric =
   "burn";
 
-// [DATA: MOCK] leftover demo id — does not match any real entity_id in
-// gold/scenario_predictions.parquet. First-load data is empty until the
-// user picks a real station (or this is fixed / served by /api/entities).
+// [DATA: DYNAMIC] empty until the station list loads, then ForecastContextBar
+// snaps this to the first live station from GET /api/entities.
 const DEFAULT_ENTITY_ID =
-  "entity_1";
+  "";
 
 const DEFAULT_SCENARIO: ForecastScenario =
   "actual";

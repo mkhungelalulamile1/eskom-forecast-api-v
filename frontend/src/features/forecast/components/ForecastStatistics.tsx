@@ -33,9 +33,9 @@ import { useForecastContext } from "../../../contexts/ForecastContext";
  * /api/scenario-data records (no dedicated stats endpoint, no mock data).
  * The sparkline is the same records' series for the selected metric.
  *
- * Caveat: with the mock default station "entity_1" (see ForecastContext)
- * or any filter that matches nothing, the service returns zeros and the
- * cards show 0 — that is "dynamic but empty", not mock.
+ * Caveat: before a live station is selected (entityId still empty) the
+ * query is disabled; if a filter matches nothing the service returns
+ * zeros and the cards show 0 — that is "dynamic but empty", not mock.
  *
  * [DATA: STATIC-UI] card titles, subtitles, icons and colors are fixed
  * UI constants; units (t/day vs tonnes) switch on the horizon selection.

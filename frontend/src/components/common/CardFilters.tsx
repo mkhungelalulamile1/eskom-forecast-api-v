@@ -22,10 +22,9 @@ import { ForecastEntity } from "../../features/forecast/types/forecast.types";
 export type ChartType = "line" | "area" | "bar";
 
 /**
- * CARD STATION FILTER — [DATA: DYNAMIC — ENDPOINT MISSING] and currently
- * UNUSED (only ChartTypeToggle below is imported by live pages). Options
- * would come from useForecastEntities() → GET /api/entities, which the
- * backend does not expose yet → would render "All Stations" only.
+ * CARD STATION FILTER — [DATA: DYNAMIC] unused on the routed pages
+ * (only ChartTypeToggle is imported). Options come from
+ * useForecastEntities() → GET /api/entities (fallback: /api/scenario-data).
  */
 interface CardStationFilterProps {
   value: string;

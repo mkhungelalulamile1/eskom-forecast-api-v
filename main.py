@@ -20,7 +20,7 @@ from app import run_single_forecast, fetch_data_from_bronze_storage
 from config import Config
 from ingest import write_to_training_data_bronze, get_db_operations_log
 from training import deploy_models_to_azure, train_models
-from ui import get_predictions_json, get_metrics_json, get_metrics_by_step_json, get_weather_json, get_oot_history_json, get_scenario_predictions_json
+from ui import get_predictions_json, get_metrics_json, get_metrics_by_step_json, get_weather_json, get_oot_history_json, get_scenario_predictions_json, get_entities_json
 from weather import refresh_weather_cache, get_weather_timeseries, _weather_cache_exists
 from monitoring import (
     get_events,
@@ -664,6 +664,8 @@ def refresh_weather_cache_route():
 #   GET  /api/oot-history              metrics/oot_history.parquet
 #                                      ({Input,Replenishment,Stockpile}_actual/
 #                                       _predicted per entity+date)
+#   GET  /api/entities                 unique entity_id list from gold parquet
+#                                      ([{id, label}, ...] — Power Station dropdown)
 #   GET  /api/weather-data             Open-Meteo cache per station
 #                                      (data/weather/weather_cache_<Station>.parquet)
 #   GET  /api/inference-monitoring[/summary]  in-memory event log (monitoring.py;
@@ -676,9 +678,6 @@ def refresh_weather_cache_route():
 #   POST /api/run-forecast             train/score pipeline (mock bronze if no SQL)
 #   POST /api/refresh-weather-cache    refresh Open-Meteo caches
 #   POST /api/initialize               full initialize pipeline
-#
-# NOTE: the SPA also calls GET /api/entities (forecast.service.getEntities)
-# for the Power Station dropdown — that route does NOT exist below yet.
 # =============================================================================
 
 
@@ -703,6 +702,25 @@ def scenario_data():
         return JSONResponse(data, status_code=200)
     except Exception as e:
         logging.error(f"Error fetching scenario data: {str(e)}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.get("/api/entities")
+def entities():
+    """
+    [DATA: DYNAMIC] Power-station list for the SPA dropdown.
+
+    Returns [{id, label}, ...] derived from gold parquet entity_id values
+    (daily + monthly scenario predictions, falling back to baseline
+    predictions). Nothing is hardcoded — if a station is added or removed
+    in the pipeline, it appears or disappears here automatically.
+    """
+    try:
+        config = Config()
+        data = get_entities_json(config)
+        return JSONResponse(data, status_code=200)
+    except Exception as e:
+        logging.error(f"Error fetching entities: {str(e)}")
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
