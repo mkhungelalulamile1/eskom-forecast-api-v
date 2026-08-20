@@ -1,0 +1,41 @@
+azure-storage-blob==12.30.0
+azure-identity==1.25.3
+pyodbc==5.3.0
+cryptography==50.0.0
+requests==2.34.2
+pandas==3.0.3
+numpy==2.4.1
+xgboost==3.0.3
+pyarrow==24.0.0
+scikit-learn==1.5.1
+fastapi==0.139.2
+starlette==1.3.1
+uvicorn[standard]==0.32.1
+apscheduler==3.10.4
+# Used by feature_store.features.calendar_context
+# (training/additional_features.py) for South African public-holiday
+# proximity features.
+holidays==0.103
+# Not direct runtime deps -- pinned to satisfy trivy image scan findings
+# (CVE-2026-23949, CVE-2026-24049) against whatever pulls these in
+# transitively during `pip install` (setuptools' own dependency chain).
+jaraco.context==6.1.2
+wheel==0.47.0
+# msgpack is also not a direct runtime dep -- same reasoning, transitive
+# (apscheduler's job store serialization) with no explicit version pinned
+# anywhere else.
+msgpack==1.2.1
+# Deliberately NOT pinning setuptools here: an exact `==` pin in this file
+# would DOWNGRADE it below whatever the Dockerfile's own unpinned
+# `pip install --upgrade setuptools` already resolved to at build time
+# (confirmed: pinning setuptools==78.1.1 silently regressed a real build
+# from the newer setuptools that step actually installs, e.g. 83.0.0).
+# setuptools also vendors its OWN private copy of wheel internally
+# (setuptools/_vendor/wheel-*.dist-info, separate from the top-level `wheel`
+# pin above) -- which specific wheel version gets vendored depends entirely
+# on which setuptools release you land on, so pinning setuptools to an
+# older release than the Dockerfile's upgrade step would otherwise reach
+# can reintroduce a vendored-wheel CVE even though the top-level `wheel`
+# pin above is fine. Confirmed live: unpinned `pip install --upgrade
+# setuptools` alone reaches a setuptools release whose vendored wheel is
+# already past the fixed version -- no action needed here.

@@ -1,0 +1,88 @@
+# Fires on release/* -> main merges. Blue/green via a plain Service color-
+# selector flip, with a manual approval gate (configured on the ADO
+# "COAL-STOCKPILE-PROD" Environment in project settings, not expressible in
+# YAML -- see docs/RUNBOOK.md) before cutover.
+trigger:
+  branches:
+    include:
+      - main
+
+pr: none
+
+variables:
+  environmentName: prod
+  adoEnvironmentName: COAL-STOCKPILE-PROD
+  namespace: app-coal-stockpile-prod
+  overlayPath: k8s/overlays/prod/frontend
+  workloadKey: frontend
+  imageRepository: coalstockpilefrontend
+  serviceName: coalstockpilefrontend
+  acrName: PLACEHOLDER_ACR_NAME_PROD
+  azureServiceConnection: PLACEHOLDER_AZURE_SERVICE_CONNECTION_PROD
+  resourceGroup: PLACEHOLDER_RESOURCE_GROUP_PROD
+  aksClusterName: PLACEHOLDER_AKS_CLUSTER_NAME_PROD
+
+stages:
+  - template: templates/validate-stage.yml
+    parameters:
+      overlayPath: ${{ variables.overlayPath }}
+
+  - template: templates/build-scan-push.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      acrName: ${{ variables.acrName }}
+      imageRepository: ${{ variables.imageRepository }}
+      dockerfilePath: "frontend"
+      buildContext: "frontend"
+      baseImageRef: "nginx:1.27-alpine"
+      baseImageBuildArgName: NGINX_BASE_IMAGE
+      mirroredBaseRepo: "base/nginx:1.27-alpine"
+      # apk upgrade (Dockerfile) is a RUN-step network call like backend's
+      # apt-get/curl -- needs the proxy build-args to reach Alpine's package
+      # mirrors from this proxy-only-egress agent.
+      passCorporateCA: true
+
+  - template: templates/deploy-stage.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      environmentName: ${{ variables.environmentName }}
+      adoEnvironmentName: ${{ variables.adoEnvironmentName }}
+      namespace: ${{ variables.namespace }}
+      overlayPath: ${{ variables.overlayPath }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      resourceGroup: ${{ variables.resourceGroup }}
+      aksClusterName: ${{ variables.aksClusterName }}
+      acrName: ${{ variables.acrName }}
+      imageRepository: ${{ variables.imageRepository }}
+      serviceName: ${{ variables.serviceName }}
+      imageTag: $[ stageDependencies.BuildScanPush_frontend.BuildScanPush.outputs['setImageTag.imageTag'] ]
+      colorEnabled: true
+
+  - template: templates/smoke-test-stage.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      environmentName: ${{ variables.environmentName }}
+      namespace: ${{ variables.namespace }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      resourceGroup: ${{ variables.resourceGroup }}
+      aksClusterName: ${{ variables.aksClusterName }}
+      imageRepository: ${{ variables.imageRepository }}
+      serviceName: ${{ variables.serviceName }}
+      colorEnabled: true
+      workloadKind: frontend
+
+  # cutover-stage.yml's deployment job targets the "COAL-STOCKPILE-PROD" ADO
+  # Environment -- add a manual approval check to that Environment in
+  # project settings so this stage pauses for sign-off before the
+  # selector flip runs.
+  - template: templates/cutover-stage.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      environmentName: ${{ variables.environmentName }}
+      adoEnvironmentName: ${{ variables.adoEnvironmentName }}
+      namespace: ${{ variables.namespace }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      resourceGroup: ${{ variables.resourceGroup }}
+      aksClusterName: ${{ variables.aksClusterName }}
+      serviceName: ${{ variables.serviceName }}

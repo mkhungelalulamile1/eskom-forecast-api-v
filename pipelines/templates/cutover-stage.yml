@@ -1,0 +1,109 @@
+# qa/prod only. Flips the client-facing Service's `color` selector to the
+# already-validated (by smoke-test-stage.yml) inactive color, confirms the
+# Service endpoint now actually resolves to a pod of that color, and auto-
+# reverts on failure.
+#
+# There's no data-layer failover step (no Availability Group equivalent)
+# since these are stateless HTTP workloads -- both colors already serve from
+# the same external state (Blob Storage / Azure SQL), so cutover here really
+# is *just* the Service-selector flip plus a verification, not a two-step
+# "promote-then-flip" sequence.
+#
+# Reaches the cluster entirely via `az aks command invoke` -- see the comment
+# at the top of deploy-stage.yml for why (no direct kubectl session from this
+# agent pool).
+parameters:
+  - name: workloadKey
+    type: string
+  - name: environmentName
+    type: string
+  # Name of the ADO Environment resource this deployment job targets -- see
+  # the comment on this same parameter in deploy-stage.yml.
+  - name: adoEnvironmentName
+    type: string
+  - name: namespace
+    type: string
+  - name: azureServiceConnection
+    type: string
+  - name: resourceGroup
+    type: string
+  - name: aksClusterName
+    type: string
+  - name: serviceName
+    type: string
+
+stages:
+  - stage: Cutover_${{ parameters.environmentName }}_${{ parameters.workloadKey }}
+    displayName: "Cutover ${{ parameters.serviceName }} (${{ parameters.environmentName }})"
+    dependsOn: SmokeTest_${{ parameters.environmentName }}_${{ parameters.workloadKey }}
+    jobs:
+      - deployment: Cutover
+        displayName: "Flip client Service color selector"
+        environment: ${{ parameters.adoEnvironmentName }}
+        pool:
+          name: default
+          demands:
+            - Agent.OS -equals Linux
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureCLI@2
+                  displayName: "Flip + verify (auto-rollback on failure)"
+                  inputs:
+                    azureSubscription: "${{ parameters.azureServiceConnection }}"
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -euo pipefail
+                      RESOURCE_GROUP="${{ parameters.resourceGroup }}"
+                      AKS_CLUSTER_NAME="${{ parameters.aksClusterName }}"
+                      NAMESPACE="${{ parameters.namespace }}"
+                      SERVICE_NAME="${{ parameters.serviceName }}"
+
+                      # See deploy-stage.yml for what this does and why.
+                      aks_cmd() {
+                        local cmd="$1"; shift
+                        local file_args=()
+                        local f
+                        for f in "$@"; do file_args+=(--file "$f"); done
+                        local result
+                        result=$(az aks command invoke \
+                          --resource-group "$RESOURCE_GROUP" \
+                          --name "$AKS_CLUSTER_NAME" \
+                          --command "$cmd" \
+                          "${file_args[@]}" \
+                          --output json)
+                        echo "$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('logs') or '', end='')"
+                        local code
+                        code=$(echo "$result" | python3 -c "import sys,json; print(json.load(sys.stdin)['exitCode'])")
+                        return "$code"
+                      }
+
+                      flip_selector() {
+                        local color="$1"
+                        aks_cmd "kubectl patch svc $SERVICE_NAME -n $NAMESPACE -p '{\"spec\":{\"selector\":{\"color\":\"$color\"}}}'"
+                      }
+
+                      rollback() {
+                        echo "##vso[task.logissue type=error]Post-cutover check failed -- reverting to $OLD_ACTIVE."
+                        flip_selector "$OLD_ACTIVE"
+                        exit 1
+                      }
+
+                      OLD_ACTIVE=$(aks_cmd "kubectl get svc $SERVICE_NAME -n $NAMESPACE -o jsonpath='{.spec.selector.color}'")
+                      if [ "$OLD_ACTIVE" = "blue" ]; then NEW_ACTIVE=green; else NEW_ACTIVE=blue; fi
+                      echo "Cutting over $SERVICE_NAME: $OLD_ACTIVE -> $NEW_ACTIVE"
+
+                      flip_selector "$NEW_ACTIVE"
+
+                      echo "== Post-cutover check: Service endpoints now point at $NEW_ACTIVE pods =="
+                      sleep 5
+                      ROUTED_PODS=$(aks_cmd "kubectl get endpoints $SERVICE_NAME -n $NAMESPACE -o jsonpath='{.subsets[0].addresses[*].targetRef.name}'")
+                      BAD_POD=$(echo "$ROUTED_PODS" | tr ' ' '\n' | grep -v -- "-$NEW_ACTIVE" || true)
+                      if [ -z "$ROUTED_PODS" ] || [ -n "$BAD_POD" ]; then
+                        echo "Service endpoints are '$ROUTED_PODS', expected only *-$NEW_ACTIVE pods"
+                        rollback
+                      fi
+
+                      echo "Cutover of $SERVICE_NAME to $NEW_ACTIVE complete."

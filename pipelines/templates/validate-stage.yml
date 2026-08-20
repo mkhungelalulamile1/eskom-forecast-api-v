@@ -1,0 +1,104 @@
+# Renders the kustomize overlay and checks it two ways before anything is
+# built or deployed: kubeconform validates the manifests are structurally
+# valid Kubernetes objects, trivy config catches misconfigurations
+# (missing resource limits, wide-open NetworkPolicy, etc.). Doesn't touch the
+# cluster at all -- no az aks command invoke needed here. Reused as-is for
+# every workload (backend/frontend) and environment; only overlayPath differs.
+#
+# Scans the *rendered* output (rendered.yaml), not the raw k8s/ source tree --
+# kustomize patches (patch-env.yaml etc.) are intentionally partial, so
+# scanning them directly as standalone resources would produce false
+# positives. The rendered output is what actually gets applied, fully merged.
+parameters:
+  - name: overlayPath
+    type: string
+
+stages:
+  - stage: Validate
+    displayName: "Validate manifests (${{ parameters.overlayPath }})"
+    jobs:
+      - job: Validate
+        displayName: "kustomize build + kubeconform + trivy config"
+        pool:
+          name: default
+          demands:
+            - Agent.OS -equals Linux
+        steps:
+          - script: |
+              set -euo pipefail
+              curl -sL -x http://swgproxy.eskom.co.za:8080 \
+                https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz \
+                | tar xz -C "$(Agent.TempDirectory)" kubeconform
+              curl -sfL -x http://swgproxy.eskom.co.za:8080 \
+                https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+                | sh -s -- -b "$(Agent.TempDirectory)"
+              echo "##vso[task.prependpath]$(Agent.TempDirectory)"
+            displayName: "Install kubeconform + trivy"
+            env:
+              HTTPS_PROXY: http://swgproxy.eskom.co.za:8080
+              HTTP_PROXY: http://swgproxy.eskom.co.za:8080
+
+          - script: |
+              set -euo pipefail
+              kubectl kustomize "${{ parameters.overlayPath }}" > "$(Agent.TempDirectory)/rendered.yaml"
+            displayName: "kustomize build"
+
+          - script: |
+              set -euo pipefail
+              kubeconform -strict -summary -ignore-missing-schemas \
+                "$(Agent.TempDirectory)/rendered.yaml"
+            displayName: "kubeconform (schema validation)"
+
+          - script: |
+              set -euo pipefail
+              trivy config --severity MEDIUM,HIGH,CRITICAL --exit-code 1 \
+                --ignorefile k8s/.trivyignore \
+                "$(Agent.TempDirectory)/rendered.yaml"
+            displayName: "trivy config (IaC misconfiguration scan)"
+            env:
+              HTTPS_PROXY: http://swgproxy.eskom.co.za:8080
+              HTTP_PROXY: http://swgproxy.eskom.co.za:8080
+
+          - script: |
+              set -euo pipefail
+              # Agent's system python3 has no pip module ("No module named pip" --
+              # Debian/Ubuntu strip ensurepip's bundled wheels from the base
+              # python3 package) AND, once pip is bootstrapped, refuses any
+              # install into it at all (PEP 668 "externally-managed-environment").
+              # --break-system-packages would override that but risks the shared
+              # agent's system python; an isolated venv sidesteps both problems
+              # without needing the (unavailable here) python3-venv/python3-pip
+              # apt packages -- `--without-pip` avoids venv creation needing
+              # ensurepip itself, then get-pip.py bootstraps pip inside the venv
+              # instead, where PEP 668 doesn't apply.
+              python3 -m venv --without-pip "$(Agent.TempDirectory)/checkov-venv"
+              curl -sL -x http://swgproxy.eskom.co.za:8080 \
+                https://bootstrap.pypa.io/get-pip.py -o "$(Agent.TempDirectory)/get-pip.py"
+              "$(Agent.TempDirectory)/checkov-venv/bin/python" "$(Agent.TempDirectory)/get-pip.py" --quiet
+              "$(Agent.TempDirectory)/checkov-venv/bin/pip" install checkov --quiet
+              "$(Agent.TempDirectory)/checkov-venv/bin/checkov" \
+                -f "$(Agent.TempDirectory)/rendered.yaml" \
+                --framework kubernetes --compact --quiet \
+                --skip-check CKV_K8S_43,CKV_K8S_35,CKV_K8S_40
+              # CKV_K8S_43 (image should use digest): every overlay's `images:`
+              # transformer retargets PLACEHOLDER_TAG to a git-sha tag per build
+              # (`kustomize edit set image ...:<tag>` in the deploy pipeline, not
+              # a digest) -- same reasoning already applied in the LineAI repo's
+              # own checkov gate for the same per-build-tag deploy pattern.
+              # CKV_K8S_35 (secrets as files, not env vars): the backend Deployment
+              # injects coalstockpile-secrets via envFrom, and config.py/ingest.py
+              # read SQL_USERNAME/SQL_PASSWORD/etc via os.environ.get(...)
+              # throughout -- switching to file-mounted secrets is a real
+              # cross-file refactor, not a CI-gate fix. Also already skipped in
+              # the LineAI repo's checkov gate.
+              # CKV_K8S_40 (containers should run as a high UID): the frontend
+              # Deployment runs as uid 101 -- nginx:alpine's own built-in
+              # non-root user (see base/frontend/*/deployment.yaml's
+              # runAsUser comment), not an omission. Moving to UID>10000 means
+              # rebuilding the image with a custom chown'd user instead of the
+              # base image's standard one -- same tradeoff, same skip, already
+              # applied (for its own UID 1000) in the LineAI repo's checkov gate.
+            displayName: "checkov (K8s manifest security gate)"
+            env:
+              HTTPS_PROXY: http://swgproxy.eskom.co.za:8080
+              HTTP_PROXY: http://swgproxy.eskom.co.za:8080
