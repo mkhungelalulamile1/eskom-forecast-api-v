@@ -28,24 +28,25 @@ import {
 
 
 /**
- * =====================================================
- * MODEL PERFORMANCE PAGE
- * =====================================================
+ * MODEL PERFORMANCE PAGE — layout + shared filters.
  *
- * Existing:
- * - Forecast Context
- * - Evaluation View
- * - KPIs
- * - OOT Performance Chart
- * - Cumulative Metric History
- * - Model Accuracy Matrix
+ * Sections and their data sources:
+ *  - ForecastContextBar  → see that component (station list broken today).
+ *  - Evaluation View     → [DATA: STATIC-UI + USER-STATE] fixed header text;
+ *                          the Tactical/Strategic toggle writes the shared
+ *                          horizon (drives every child's API filtering).
+ *  - ModelPerformanceKPIs → [DATA: DYNAMIC] GET /api/forecast-metrics.
+ *  - OotPerformanceChart  → [DATA: DYNAMIC] GET /api/oot-history.
+ *  - CumulativeBurnHistory→ [DATA: DYNAMIC] GET /api/oot-history.
+ *  - ModelAccuracyMatrix  → [DATA: DYNAMIC] GET /api/forecast-metrics.
  *
- * The selected forecast metric is passed through to
- * the cumulative history chart so that:
+ * Metric → parquet column mapping passed to children:
+ *   burn → Input, supply → Replenishment, stockpile → Stockpile
+ * (each with _actual/_predicted suffixes in the OOT payload).
  *
- * burn      -> Input_actual / Input_predicted
- * supply    -> Replenishment_actual / Replenishment_predicted
- * stockpile  -> Stockpile_actual / Stockpile_predicted
+ * NOTE: the local metrics parquet only contains horizon "tactical"/"
+ * tactical_oot" rows, so the Strategic Monthly view renders empty until
+ * monthly (strategic) metrics exist in the backend data.
  */
 const ModelPerformancePage = () => {
 

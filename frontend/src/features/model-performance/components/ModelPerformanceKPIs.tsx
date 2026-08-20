@@ -27,6 +27,22 @@ interface ModelPerformanceKPIsProps {
 }
 
 
+/**
+ * MODEL PERFORMANCE KPIs — Average RMSE, Average MAE, Average NRMSE
+ * (with Strong/Review/Attention status chip) and Average R².
+ *
+ * [DATA: DYNAMIC] all four values are means over GET /api/forecast-metrics
+ * records filtered client-side by the selected station + horizon
+ * (daily→"tactical", monthly→"strategic"). smape is fetched too but only
+ * rendered in a hidden element. No mock data.
+ *
+ * [DATA: STATIC-UI] card labels/descriptions, icons, colors and the NRMSE
+ * thresholds (≤25 Strong, ≤50 Review, else Attention).
+ *
+ * CAVEAT: when entityId is the mock default "entity_1" (or "all"), no
+ * record matches → cards show "—"/"No data" even though the API call
+ * succeeded. This is a filter-state issue, not a data issue.
+ */
 const ModelPerformanceKPIs = ({
   horizon,
   entityId,
@@ -52,9 +68,9 @@ const ModelPerformanceKPIs = ({
 
 
   /*
-   * --------------------------------------------------
-   * FILTER BY HORIZON
-   * --------------------------------------------------
+   * [DATA: DYNAMIC] Client-side filter of the API records by station and
+   * horizon (daily → backend horizon "tactical", monthly → "strategic").
+   * NOTE: entityId "all"/"entity_1" matches nothing here.
    */
 
   const selectedMetrics: ModelMetricRecord[] =

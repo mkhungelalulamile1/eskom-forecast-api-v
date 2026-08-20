@@ -1,3 +1,5 @@
+// Routing table only — [DATA: none]. Routed pages: /forecast, /model-performance (sidebar), plus
+// hidden /inference, /inference-monitoring, /login. No data fetching here.
 import { lazy, Suspense } from "react";
 
 import {

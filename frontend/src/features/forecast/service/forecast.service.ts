@@ -10,22 +10,35 @@ import {
   ForecastStatistics,
 } from "../types/forecast.types";
 
-
+/**
+ * FORECAST SERVICE — all data is fetched live from the FastAPI backend.
+ *
+ * [DATA: DYNAMIC] Every method here calls a real backend endpoint:
+ *
+ *   GET /api/forecast-data   → gold/{daily,monthly}/predictions.parquet
+ *                              (Azure Blob "gold" container, or local
+ *                              data/gold/ fallback when Azure env vars
+ *                              are unset — local files may be mock-
+ *                              generated, see backend generate_mock_data.py)
+ *
+ *   GET /api/scenario-data   → gold/{daily,monthly}/scenario_predictions.parquet
+ *                              (same Azure/local fallback; includes the
+ *                              scenario_id column: actual, weather_hot_dry,
+ *                              weather_hot_wet, weather_cold_dry, weather_cold_wet)
+ *
+ *   GET /api/entities        → ⚠️ DOES NOT EXIST on the backend yet
+ *                              (main.py has no such route → 404). Until it
+ *                              is added, useForecastEntities() returns an
+ *                              empty list and the Power Station dropdown
+ *                              shows "No stations available".
+ *
+ * No mock/hardcoded records are returned by this service — if the API
+ * fails, react-query surfaces the error and the UI shows its error state.
+ */
 class ForecastService {
   private readonly baseUrl = "/api";
 
-
-  /**
-   * =====================================================
-   * FORECAST DATA
-   * =====================================================
-   */
-
-  /**
-   * Get normal/baseline forecast data.
-   *
-   * GET /api/forecast-data
-   */
+  /** [DATA: DYNAMIC] GET /api/forecast-data — baseline burn/supply predictions. */
   async getForecastData(): Promise<ForecastApiResponse> {
     const response =
       await axios.get<ForecastApiResponse>(
@@ -35,18 +48,7 @@ class ForecastService {
     return response.data;
   }
 
-
-  /**
-   * =====================================================
-   * SCENARIO DATA
-   * =====================================================
-   */
-
-  /**
-   * Get all scenario forecast data.
-   *
-   * GET /api/scenario-data
-   */
+  /** [DATA: DYNAMIC] GET /api/scenario-data — all 5 scenarios incl. baseline "actual". */
   async getScenarioData(): Promise<ForecastScenarioApiResponse> {
     const response =
       await axios.get<ForecastScenarioApiResponse>(
@@ -56,27 +58,14 @@ class ForecastService {
     return response.data;
   }
 
-
   /**
-   * =====================================================
-   * ENTITIES
-   * =====================================================
-   */
-
-  /**
-   * Get all forecast entities from the backend.
-   * 
-   * CONNECTED TO: /api/entities
-   * 
-   * This method fetches the definitive list of power
-   * stations/entities from the backend, ensuring the
-   * frontend never uses hardcoded station names.
-   * 
-   * The backend extracts these from the actual scenario
-   * prediction data, so the list automatically reflects
-   * what's really available in the system.
-   * 
-   * Purpose: Eliminate hardcoded power station lists
+   * [DATA: DYNAMIC — ENDPOINT MISSING] GET /api/entities.
+   *
+   * Intended to return the definitive power-station list extracted from
+   * the scenario parquet files, but the backend (main.py) does not expose
+   * /api/entities yet, so this currently 404s and callers fall back to an
+   * empty list. Needed from engineers: add the route (or derive stations
+   * client-side from /api/scenario-data like StationFleetOverview does).
    */
   async getEntities(): Promise<ForecastEntity[]> {
     const response =
@@ -87,16 +76,10 @@ class ForecastService {
     return response.data;
   }
 
-
   /**
-   * =====================================================
-   * SCENARIO MAPPING
-   * =====================================================
-   */
-
-  /**
-   * Convert frontend scenario IDs
-   * to backend scenario IDs.
+   * [DATA: STATIC-UI] Frontend scenario id → backend scenario_id mapping.
+   * Pure constant translation, no data. Backend ids come from
+   * training/scenario_definitions.py SCENARIO_DEFINITIONS.
    */
   private getBackendScenarioId(
     scenario: ForecastScenario
@@ -122,13 +105,11 @@ class ForecastService {
     }
   }
 
-
   /**
-   * =====================================================
-   * CHART DATA
-   * =====================================================
+   * [DATA: DYNAMIC] Chart records = /api/scenario-data filtered by the
+   * user's horizon/scenario/station selection (filtering happens
+   * client-side; there is no server-side query parameter).
    */
-
   async getForecastChart(
     filters: ForecastFilters
   ): Promise<ForecastRecord[]> {
@@ -137,13 +118,7 @@ class ForecastService {
     );
   }
 
-
-  /**
-   * =====================================================
-   * FORECAST RESULTS
-   * =====================================================
-   */
-
+  /** [DATA: DYNAMIC] Same filtered records as the chart (used by export/tables). */
   async getForecastResults(
     filters: ForecastFilters
   ): Promise<ForecastRecord[]> {
@@ -152,13 +127,12 @@ class ForecastService {
     );
   }
 
-
   /**
-   * =====================================================
-   * STATISTICS
-   * =====================================================
+   * [DATA: DYNAMIC] KPI numbers (Average/Peak Forecast, Projected Volume,
+   * Forecast Horizon) are computed client-side from the same
+   * /api/scenario-data records — no separate stats endpoint. All zeros
+   * when the filter matches nothing (e.g. the mock default entity "entity_1").
    */
-
   async getStatistics(
     filters: ForecastFilters
   ): Promise<ForecastStatistics> {
@@ -177,7 +151,7 @@ class ForecastService {
       };
     }
 
-
+    // [DATA: DYNAMIC] metric → parquet column: burn=Input, supply=Replenishment, stockpile=Stockpile
     const values = records.map(
       (record) =>
         this.getMetricValue(
@@ -214,13 +188,10 @@ class ForecastService {
     };
   }
 
-
   /**
-   * =====================================================
-   * FILTERING
-   * =====================================================
+   * [DATA: DYNAMIC] Client-side filtering of /api/scenario-data by
+   * horizon (daily/monthly array), scenario_id and entity_id.
    */
-
   private async getFilteredRecords(
     filters: ForecastFilters
   ): Promise<ForecastRecord[]> {
@@ -255,10 +226,9 @@ class ForecastService {
 
 
     /**
-     * All Stations
-     *
-     * Aggregate all stations by
-     * forecast date.
+     * [DATA: DYNAMIC] "All Stations" support: sums Input/Replenishment/
+     * Stockpile across stations per date. NOTE: the context bar currently
+     * has no "All Stations" option, so this path is unreachable from the UI.
      */
     if (
       filters.entityId === "all"
@@ -268,7 +238,7 @@ class ForecastService {
       );
     }
 
-
+    // Debug trace of the applied filters (dev aid, not user-facing data).
     console.log(
       "[ForecastService] Filtering forecast:",
       {
@@ -295,13 +265,10 @@ class ForecastService {
     return filteredRecords;
   }
 
-
   /**
-   * =====================================================
-   * ALL-STATIONS AGGREGATION
-   * =====================================================
+   * [DATA: DYNAMIC] Aggregates the already-fetched scenario records for
+   * the "all" station selection (pure client-side math on backend data).
    */
-
   private aggregateAllStations(
     records: ForecastRecord[]
   ): ForecastRecord[] {
@@ -362,7 +329,6 @@ class ForecastService {
         continue;
       }
 
-
       existing.Input =
         Number(
           existing.Input ?? 0
@@ -390,25 +356,23 @@ class ForecastService {
         );
     }
 
-
     return Array.from(
       byDate.values()
     );
   }
 
-
   /**
-   * =====================================================
-   * METRIC MAPPING
-   * =====================================================
+   * [DATA: STATIC-UI] Metric → parquet column mapping (constant).
+   * burn → Input, supply → Replenishment, stockpile → Stockpile.
    */
-
   private getMetricValue(
     record: ForecastRecord,
     metric: ForecastFilters["metric"]
   ): number {
 
-    switch (metric) {
+    switch (
+      metric
+    ) {
 
       case "burn":
         return Number(

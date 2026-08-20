@@ -1,3 +1,4 @@
+// UNUSED. [DATA: none] icon wrapper.
 import { ReactNode } from "react";
 
 import { Avatar } from "@mui/material";

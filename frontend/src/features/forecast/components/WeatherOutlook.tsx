@@ -1,3 +1,5 @@
+// UNUSED COMPONENT (orphan) — [DATA: DYNAMIC] fetches /api/weather-data directly via axios;
+// superseded by WeatherIntelligence's built-in outlook view. Not imported by any page.
 import {
   Box,
   Stack,

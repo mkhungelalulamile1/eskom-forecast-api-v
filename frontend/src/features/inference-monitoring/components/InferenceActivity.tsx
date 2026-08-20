@@ -1,3 +1,5 @@
+// /inference-monitoring (hidden route). [DATA: DYNAMIC] activity feed from the
+// live monitoring events.
 import React from "react";
 
 import {

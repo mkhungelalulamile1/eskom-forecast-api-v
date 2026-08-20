@@ -22,13 +22,10 @@ import { ForecastEntity } from "../../features/forecast/types/forecast.types";
 export type ChartType = "line" | "area" | "bar";
 
 /**
- * =====================================================
- * CARD STATION FILTER  (NEW — per-card filter)
- * =====================================================
- * A small station selector for a single card. Defaults to
- * "All Stations" so each card shows the full fleet until the
- * user picks a specific power station. Renders right-aligned
- * at the far end of a card header.
+ * CARD STATION FILTER — [DATA: DYNAMIC — ENDPOINT MISSING] and currently
+ * UNUSED (only ChartTypeToggle below is imported by live pages). Options
+ * would come from useForecastEntities() → GET /api/entities, which the
+ * backend does not expose yet → would render "All Stations" only.
  */
 interface CardStationFilterProps {
   value: string;
@@ -79,6 +76,8 @@ interface ChartTypeToggleProps {
   onChange: (value: ChartType) => void;
 }
 
+/** [DATA: USER-STATE] Line/Area/Bar chart-type toggle — local view state
+ * for cards (used by ForecastTrendChart); no data involved. */
 export const ChartTypeToggle = ({ value, onChange }: ChartTypeToggleProps) => {
   return (
     <ToggleButtonGroup

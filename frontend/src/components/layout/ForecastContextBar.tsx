@@ -47,24 +47,29 @@ interface ForecastContextBarProps {
 
 
 /**
- * =====================================================
- * FORECAST CONTEXT BAR
- * =====================================================
+ * FORECAST CONTEXT BAR — sticky global filters for Forecast + Model
+ * Performance pages.
  *
- * Global dashboard controls:
+ * Data-source summary of every control:
  *
- * - Horizon
- * - Metric
- * - Power Station
- * - Scenario
+ *  - Horizon dropdown    [DATA: STATIC-UI + USER-STATE] fixed options
+ *                         "Tactical (Daily)" / "Strategic (Monthly)".
+ *  - Metric dropdown     [DATA: STATIC-UI + USER-STATE] fixed options
+ *                         burn / supply / stockpile.
+ *  - Power Station       [DATA: DYNAMIC — ENDPOINT MISSING] options come
+ *                         from useForecastEntities() → GET /api/entities,
+ *                         which the backend does not expose yet → the list
+ *                         is empty and the select shows "No stations
+ *                         available"; the selection stays on the mock
+ *                         default "entity_1" (matches no real station).
+ *  - Scenario dropdown   [DATA: STATIC-UI + USER-STATE] fixed 5 options
+ *                         mapped 1:1 to backend scenario_id values.
+ *  - Export CSV          [DATA: DYNAMIC] exportAction prop renders
+ *                         ExportForecast (live records → CSV).
+ *  - Reset button        [DATA: STATIC-UI] restores hardcoded defaults
+ *                         (daily / burn / actual / first station).
  *
- * Behaviour:
- *
- * 1. Normal / expanded at the top.
- * 2. Sticks to the very top while scrolling.
- * 3. Compresses when the user scrolls down.
- * 4. Export CSV lives inside the context bar.
- * 5. Reset remains available in both states.
+ * Behaviour: expanded at top, sticks while scrolling, compacts after 40px.
  */
 
 const ForecastContextBar = ({
@@ -223,9 +228,9 @@ const ForecastContextBar = ({
 
 
   /**
-   * =====================================================
-   * KEEP ENTITY SELECTION VALID
-   * =====================================================
+   * [DATA: DYNAMIC] Self-heal: if the selected entityId is not in the
+   * fetched entity list, snap to the first available station. Currently
+   * inert because /api/entities 404s and the list is always empty.
    */
 
   useEffect(() => {
@@ -645,9 +650,8 @@ const ForecastContextBar = ({
         }}
       >
 
-        {/* =================================================
-            HORIZON
-        ================================================= */}
+        {/* [DATA: STATIC-UI + USER-STATE] HORIZON — fixed options; value
+            drives which array (daily/monthly) of /api/scenario-data is used. */}
 
         <Field
           label="Horizon"
@@ -683,9 +687,8 @@ const ForecastContextBar = ({
         </Field>
 
 
-        {/* =================================================
-            METRIC
-        ================================================= */}
+        {/* [DATA: STATIC-UI + USER-STATE] METRIC — fixed options; value maps
+            to parquet columns Input / Replenishment / Stockpile. */}
 
         <Field
           label="Metric"
@@ -725,9 +728,9 @@ const ForecastContextBar = ({
         </Field>
 
 
-        {/* =================================================
-            POWER STATION
-        ================================================= */}
+        {/* [DATA: DYNAMIC — ENDPOINT MISSING] POWER STATION — options should
+            come from GET /api/entities (backend route doesn't exist yet), so
+            today this renders "No stations available" and nothing is selectable. */}
 
         <Field
           label="Power Station"
@@ -785,9 +788,8 @@ const ForecastContextBar = ({
         </Field>
 
 
-        {/* =================================================
-            SCENARIO
-        ================================================= */}
+        {/* [DATA: STATIC-UI + USER-STATE] SCENARIO — fixed labels mapped to
+            backend scenario_id (actual, weather_hot_dry, ...). */}
 
         <Field
           label="Scenario"

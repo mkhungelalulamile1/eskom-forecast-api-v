@@ -48,6 +48,18 @@ interface StockpileChartPoint {
   stockpile: number;
 }
 
+/**
+ * STOCKPILE TRAJECTORY — projected stockpile area chart with a
+ * tonnes ⇄ days-of-supply unit toggle.
+ *
+ * [DATA: DYNAMIC] chart series = Stockpile column of filtered
+ * /api/scenario-data records; Days of Supply divides each point by the
+ * mean daily burn (Input) from the same API. Min/max/negative-period
+ * risk chips are computed from the same series. No mock values.
+ *
+ * [DATA: USER-STATE] the tons/days toggle is local UI state.
+ * [DATA: STATIC-UI] labels, colors and helper text.
+ */
 const StockpileTrajectory = ({
   filters,
 }: StockpileTrajectoryProps) => {
@@ -832,7 +844,8 @@ const StockpileTrajectory = ({
               </Typography>
             </Box>
 
-            {/* Risk */}
+            {/* [DATA: DYNAMIC] Risk chip — count of negative projected
+                periods from the API series (threshold wording STATIC-UI). */}
 
             <Box sx={{ minWidth: 0 }}>
               <Stack

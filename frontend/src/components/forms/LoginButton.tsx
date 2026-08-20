@@ -1,3 +1,4 @@
+// [DATA: STATIC-UI] submit button for the simulated (mock) login form.
 import { Button, CircularProgress } from "@mui/material";
 
 interface LoginButtonProps {

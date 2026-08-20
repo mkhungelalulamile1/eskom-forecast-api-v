@@ -30,6 +30,22 @@ import {
 
 import forecastService from "../service/forecast.service";
 
+/**
+ * SCENARIO COMPARISON — Baseline vs selected scenario card (subtitle,
+ * periods badge, 3 summary cards: Baseline Average, {Scenario}, Scenario
+ * Impact; two chart lines Baseline + Scenario; footer averages).
+ *
+ * [DATA: DYNAMIC] one query (GET /api/scenario-data) feeds everything:
+ * baseline = records with scenario_id "actual", scenario = records with
+ * the selected scenario_id, both filtered to the chosen station/horizon.
+ * Averages and the Scenario Impact % are computed client-side from those
+ * records — no mock data.
+ *
+ * [DATA: STATIC-UI] scenarioLabels/scenarioColors maps and the card
+ * titles are fixed constants ("Baseline Average", "Scenario Impact"...).
+ * Note: the "actual" backend scenario is the un-adjusted baseline run,
+ * not observed actuals — observed values live in /api/oot-history.
+ */
 interface ScenarioComparisonProps {
   filters: ForecastFilters;
 }

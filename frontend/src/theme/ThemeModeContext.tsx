@@ -1,3 +1,4 @@
+// [DATA: USER-STATE] light/dark mode preference context — no backend data.
 import {
   createContext,
   ReactNode,

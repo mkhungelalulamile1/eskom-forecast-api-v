@@ -1,3 +1,5 @@
+// ⚠️ /inference page is routed but HIDDEN from the sidebar navigation.
+// [DATA: MOCK] the `pipeline` steps array below is a hardcoded demo list.
 import { useState, useMemo } from "react";
 import {
   CheckCircleRounded,

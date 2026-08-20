@@ -27,6 +27,11 @@ import {
 import AppCard from "../../../components/common/AppCard";
 import CardHeader from "../../../components/common/CardHeader";
 
+/**
+ * ⚠️ UNUSED COMPONENT — not imported by any routed page.
+ * [DATA: MOCK] `errorData` (Week 1/Week 2 …) is a hardcoded demo series.
+ */
+
 
 
 const errorData = [

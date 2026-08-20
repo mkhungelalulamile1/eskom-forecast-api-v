@@ -1,3 +1,5 @@
+// Used ONLY by ForecastSummary (unrouted Dashboard page).
+// [DATA: DYNAMIC] Average/Peak Forecast etc. computed from /api/scenario-data records.
 import { useEffect, useState } from "react";
 
 import Grid from "@mui/material/Grid";

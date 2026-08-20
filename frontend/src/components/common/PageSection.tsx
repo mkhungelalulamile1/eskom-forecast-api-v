@@ -1,3 +1,4 @@
+// UNUSED. [DATA: none] layout section.
 import {
   Box,
   BoxProps,

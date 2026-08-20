@@ -1,3 +1,6 @@
+// Used ONLY by DashboardContent (unrouted Dashboard page) — NOT the routed
+// Forecast page (that uses ForecastTrendChart).
+// [DATA: DYNAMIC] fetches /api/scenario-data via its own hook.
 import { useEffect, useMemo, useState } from "react";
 
 import {

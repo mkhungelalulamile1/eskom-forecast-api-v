@@ -37,6 +37,18 @@ import {
 } from "../types/weather.types";
 
 
+/**
+ * WEATHER CORRELATION — Pearson correlations between weather variables
+ * (temperature, rainfall, wind, humidity, UV, sunshine) and forecast
+ * burn/supply.
+ *
+ * [DATA: DYNAMIC] correlations are computed client-side by joining two
+ * live endpoints by date: /api/scenario-data (forecast burn/supply) and
+ * /api/weather-data (weather series for the selected station). No mock
+ * numbers — if either series is empty the table renders empty.
+ *
+ * [DATA: STATIC-UI] variable labels, colors, table headers.
+ */
 interface WeatherCorrelationProps {
   filters: ForecastFilters;
 }

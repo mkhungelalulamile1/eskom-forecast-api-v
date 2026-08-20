@@ -1,3 +1,4 @@
+// [DATA: STATIC-UI] controlled text input — no data source.
 import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
 import {
   InputAdornment,

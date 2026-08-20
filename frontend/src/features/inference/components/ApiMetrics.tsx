@@ -1,3 +1,6 @@
+// ⚠️ /inference page is routed but HIDDEN from the sidebar navigation.
+// [DATA: MOCK] every StatCard value below ("12,540", "99.2%", …) is a
+// hardcoded demo string — no backend call in this component.
 import {
   AccessTimeRounded,
   ApiRounded,

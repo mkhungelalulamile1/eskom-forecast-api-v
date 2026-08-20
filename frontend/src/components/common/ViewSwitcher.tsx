@@ -1,3 +1,4 @@
+// [DATA: USER-STATE] view-mode toggle used by hidden /inference components.
 import React from "react";
 import {
     ToggleButtonGroup,

@@ -1,3 +1,5 @@
+// UNUSED COMPONENT (orphan) — [DATA: MOCK] contains a hardcoded demo table
+// (see its own WARNING comments). Not imported by any page.
 import {
   DownloadRounded,
   VisibilityRounded,

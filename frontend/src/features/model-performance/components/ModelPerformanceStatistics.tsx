@@ -10,6 +10,13 @@ import {
 
 import StatCard from "../../../components/common/StatCard";
 
+/**
+ * ⚠️ UNUSED COMPONENT — not imported by any routed page.
+ * [DATA: MOCK] every StatCard value ("98.6%", "+1.2%" …) is hardcoded
+ * demo text. Live equivalents exist in ModelPerformanceKPIs
+ * (GET /api/forecast-metrics).
+ */
+
 
 const ModelPerformanceStatistics = () => {
 

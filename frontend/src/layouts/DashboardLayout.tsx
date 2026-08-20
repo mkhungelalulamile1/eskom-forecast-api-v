@@ -20,6 +20,7 @@ import DashboardSidebar from "../components/layout/DashboardSidebar";
  * =====================================================
  */
 
+// [DATA: STATIC-UI] Fixed per-route header strings — no backend data.
 const pageTitles: Record<
   string,
   {

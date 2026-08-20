@@ -18,6 +18,14 @@ import {
   Typography,
 } from "@mui/material";
 
+/**
+ * DASHBOARD SIDEBAR — [DATA: STATIC-UI] throughout: logo asset, the
+ * "Coal Stockpile / Forecasting Platform" title, and nav items come
+ * from routes/navigation.ts (fixed list; Inference Monitoring entry is
+ * commented out there). The Settings / Help & Support / Sign out footer
+ * below is commented-out dead code. Nothing here fetches data.
+ */
+
 import { NavLink } from "react-router-dom";
 
 import { navigation } from "../../routes/navigation";

@@ -1,3 +1,5 @@
+// Used ONLY by the unrouted Dashboard page.
+// [DATA: DYNAMIC] KPI values come from GET /api/inference-monitoring/summary.
 import { useMemo } from "react";
 import Grid from "@mui/material/Grid";
 import { AssessmentRounded, BoltRounded, SpeedRounded, TimelineRounded } from "@mui/icons-material";

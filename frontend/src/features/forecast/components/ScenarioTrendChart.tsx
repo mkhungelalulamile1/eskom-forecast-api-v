@@ -1,3 +1,5 @@
+// UNUSED COMPONENT (orphan) — [DATA: DYNAMIC] wraps useForecastScenarioData
+// (/api/scenario-data), but is not imported by any page (ScenarioComparison is used instead).
 import {
   Box,
   Stack,

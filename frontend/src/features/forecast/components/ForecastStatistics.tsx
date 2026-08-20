@@ -25,12 +25,20 @@ import {
 import { useForecastContext } from "../../../contexts/ForecastContext";
 
 /**
- * =====================================================
- * FORECAST STATISTICS (REDESIGNED)
- * =====================================================
- * Redesigned KPI row: each card now uses the new PanelCard-like
- * visual language, includes an animated count-up and a tiny
- * sparkline of the metric trend over the horizon.
+ * FORECAST STATISTICS — the 4 KPI cards on top of the Forecast page:
+ * Average Forecast, Peak Forecast, Projected Volume, Forecast Horizon.
+ *
+ * [DATA: DYNAMIC] All four values come from useForecastStatistics() →
+ * forecastService.getStatistics() → client-side math over filtered
+ * /api/scenario-data records (no dedicated stats endpoint, no mock data).
+ * The sparkline is the same records' series for the selected metric.
+ *
+ * Caveat: with the mock default station "entity_1" (see ForecastContext)
+ * or any filter that matches nothing, the service returns zeros and the
+ * cards show 0 — that is "dynamic but empty", not mock.
+ *
+ * [DATA: STATIC-UI] card titles, subtitles, icons and colors are fixed
+ * UI constants; units (t/day vs tonnes) switch on the horizon selection.
  */
 const ForecastStatistics = () => {
   const { horizon, metric, entityId, scenario } = useForecastContext();
@@ -40,6 +48,7 @@ const ForecastStatistics = () => {
   const { data, isError } = useForecastStatistics(filters);
   const { data: chartData } = useForecastChart(filters);
 
+  // [DATA: DYNAMIC] sparkline series from /api/scenario-data records
   const records: ForecastRecord[] = chartData ?? [];
   const spark = records
     .map((r) =>
@@ -58,6 +67,8 @@ const ForecastStatistics = () => {
   const metricUnit = metric === "stockpile" ? "tonnes" : horizon === "daily" ? "t/day" : "tonnes";
   const horizonUnit = horizon === "daily" ? "Days" : "Months";
 
+  // [DATA: DYNAMIC] value fields (average/peak/projectedVolume/horizon) are
+  // computed from the API records; labels/units below are STATIC-UI.
   const cards = [
     {
       title: "Average Forecast",

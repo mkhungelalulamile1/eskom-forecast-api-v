@@ -17,24 +17,12 @@ import {
 
 
 /**
- * =====================================================
- * EXPORT FORECAST
- * =====================================================
+ * EXPORT FORECAST — "Export CSV" button in the context bar.
  *
- * Exports the currently selected forecast:
- *
- * - Horizon
- * - Power station
- * - Scenario
- *
- * Includes:
- *
- * - Entity
- * - Date
- * - Step
- * - Burn
- * - Supply
- * - Stockpile
+ * [DATA: DYNAMIC] exports the currently filtered live records
+ * (useForecastChart → /api/scenario-data) as CSV columns:
+ * Entity, Date, Step, Burn, Supply, Stockpile.
+ * Disabled/no-op when the current filter matches no records.
  */
 
 interface ExportForecastProps {

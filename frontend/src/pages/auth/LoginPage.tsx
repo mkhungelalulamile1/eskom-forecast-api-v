@@ -1,3 +1,5 @@
+// /login — reachable by URL only (route guard is a hardcoded no-op).
+// [DATA: STATIC-UI + MOCK] static marketing text + simulated login form.
 import {
   AssessmentRounded,
   LogoutRounded,

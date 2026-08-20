@@ -126,6 +126,18 @@ interface CumulativeBurnHistoryProps {
  * ======================================================
  */
 
+/**
+ * CUMULATIVE BURN/CUMULATIVE METRIC HISTORY — running-sum chart of
+ * actual vs predicted across the out-of-time sample.
+ *
+ * [DATA: DYNAMIC] built from GET /api/oot-history (same records as the
+ * OOT chart) filtered by station + horizon, then cumulatively summed
+ * client-side per date for the selected metric
+ * (Input/Replenishment/Stockpile × _actual/_predicted). No mock data.
+ *
+ * [DATA: STATIC-UI] metric labels/subtitles ("Burn", "Supply",
+ * "Stockpile"), colors, axis formatting.
+ */
 const CumulativeBurnHistory = ({
   entityId,
   horizon,

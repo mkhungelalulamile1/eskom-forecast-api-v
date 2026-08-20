@@ -1,3 +1,4 @@
+// [DATA: none] generic table — rows passed by caller.
 import React from "react";
 import {
   Box,

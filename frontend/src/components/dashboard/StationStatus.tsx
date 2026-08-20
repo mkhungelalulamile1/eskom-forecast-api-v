@@ -1,3 +1,6 @@
+// Used ONLY by the unrouted Dashboard page.
+// [DATA: DYNAMIC — ENDPOINT MISSING] station list would come from
+// GET /api/entities (route doesn't exist) → renders empty.
 import {
   CircularProgress,
   Stack,

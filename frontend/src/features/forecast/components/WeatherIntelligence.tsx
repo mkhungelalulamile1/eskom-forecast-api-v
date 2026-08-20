@@ -55,6 +55,24 @@ interface WeatherEntity {
 }
 
 
+/**
+ * WEATHER INTELLIGENCE — current-conditions tile strip + 7/30-day outlook
+ * and signal aggregates for the selected station.
+ *
+ * [DATA: DYNAMIC] all values come from useWeatherSummary /
+ * useWeatherOutlook / useWeatherSignals → weather.service →
+ * GET /api/weather-data?entity_id=… (Open-Meteo cache on the backend).
+ * No mock weather numbers in this component.
+ *
+ * [DATA: DYNAMIC — ENDPOINT MISSING] the station tab strip is fed by
+ * useForecastEntities() → GET /api/entities, which the backend does not
+ * expose yet → no tabs render and the "ensure entity exists" effect
+ * never corrects the mock default "entity_1" (weather then loads for a
+ * station id the backend doesn't know — backend falls back to its
+ * default station, Kendal).
+ *
+ * [DATA: USER-STATE] current / 7-day / 30-day view switch.
+ */
 const WeatherIntelligence = ({
   entityId: propEntityId,
 }: WeatherIntelligenceProps) => {
@@ -621,7 +639,9 @@ const WeatherIntelligence = ({
       />
 
 
-      {/* CURRENT VIEW */}
+      {/* [DATA: DYNAMIC] CURRENT VIEW — condition, temp max/min, rainfall,
+          cloud, humidity, wind, UV, sunshine + date all from
+          GET /api/weather-data (latest record for the station). */}
 
       {view === "current" && (
         <CurrentWeather
@@ -648,7 +668,8 @@ const WeatherIntelligence = ({
       )}
 
 
-      {/* OUTLOOK VIEW */}
+      {/* [DATA: DYNAMIC] OUTLOOK VIEW — per-day cards (condition, temps,
+          rainfall, wind) from the same API's forward records. */}
 
       {view !== "current" && (
         <>

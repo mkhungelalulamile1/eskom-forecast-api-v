@@ -23,6 +23,13 @@ import {
 import AppCard from "../../../components/common/AppCard";
 import CardHeader from "../../../components/common/CardHeader";
 
+/**
+ * ⚠️ UNUSED COMPONENT — not imported by any routed page.
+ * [DATA: MOCK] `data` below is a hardcoded demo series (Jan–Jun,
+ * 96.8–98.8%). Replace with /api/forecast-metrics history before wiring
+ * this into a page.
+ */
+
 
 const data = [
   {

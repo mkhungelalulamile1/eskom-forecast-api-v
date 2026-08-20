@@ -16,6 +16,14 @@ import LoginButton from "./LoginButton";
 import { ROUTES } from "../../routes/routes";
 
 
+/**
+ * LOGIN FORM (/login — reachable only by URL; the route guard never
+ * redirects there because ProtectedRoute hardcodes isAuthenticated=true).
+ *
+ * [DATA: MOCK ⚠️] submit handler is an 800 ms local simulation — no API
+ * call happens — and it console.logs the username AND PASSWORD. Replace
+ * with a real auth endpoint before any production use.
+ */
 const LoginForm = () => {
 
 

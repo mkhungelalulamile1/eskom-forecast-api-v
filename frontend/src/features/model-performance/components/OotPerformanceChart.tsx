@@ -120,6 +120,18 @@ interface OotPerformanceChartProps {
  * ======================================================
  */
 
+/**
+ * OOT PERFORMANCE CHART — Actual vs Predicted lines over the
+ * out-of-time sample for the selected station/horizon/metric.
+ *
+ * [DATA: DYNAMIC] series come from GET /api/oot-history records
+ * ({metric}_actual / {metric}_predicted) filtered client-side by
+ * entity_id + horizon (daily→"tactical", monthly→"strategic").
+ * No mock data; empty state renders when no records match.
+ *
+ * [DATA: STATIC-UI] title/subtitle, legend names ("Actual"/"Predicted"),
+ * colors, axis formatting.
+ */
 const OotPerformanceChart = ({
   entityId,
   horizon,

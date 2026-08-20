@@ -1,3 +1,5 @@
+// /inference-monitoring (hidden route). [DATA: DYNAMIC] recent error events from
+// /api/inference-monitoring.
 import React from "react";
 
 import {

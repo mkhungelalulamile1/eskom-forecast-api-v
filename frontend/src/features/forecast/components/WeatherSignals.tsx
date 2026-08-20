@@ -1,3 +1,5 @@
+// UNUSED COMPONENT (orphan) — [DATA: DYNAMIC] wraps useWeatherSignals (/api/weather-data);
+// superseded by WeatherIntelligence's built-in signals view. Not imported by any page.
 import {
   Box,
   Stack,

@@ -216,6 +216,18 @@ const ForecastTooltip = ({
   );
 };
 
+/**
+ * FORECAST TREND CHART — "… Burn Forecast" card with KPI strip
+ * (Average Burn, Peak Burn, Horizon Trend, Periods), the Burn/Supply
+ * chart and the footer stats (Lowest Projected, Avg Supply, Peak).
+ *
+ * [DATA: DYNAMIC] chart series + every KPI number are computed from
+ * useForecastChart() → filtered /api/scenario-data records
+ * (Input = burn, Replenishment = supply). No mock values.
+ *
+ * [DATA: STATIC-UI] card titles, badge labels ("Forecast Generated"),
+ * colors, and the hard "t/day" unit labels in tooltip/footer.
+ */
 const ForecastTrendChart = ({
   filters,
 }: ForecastTrendChartProps) => {
@@ -784,7 +796,7 @@ const ForecastTrendChart = ({
           },
         }}
       >
-        {/* AVERAGE BURN */}
+        {/* [DATA: DYNAMIC] AVERAGE BURN — mean of the API burn (Input) records */}
 
         <Box
           sx={{
@@ -835,7 +847,7 @@ const ForecastTrendChart = ({
           </Typography>
         </Box>
 
-        {/* PEAK BURN */}
+        {/* [DATA: DYNAMIC] PEAK BURN — max of the API burn (Input) records */}
 
         <Box
           sx={{
@@ -909,6 +921,7 @@ const ForecastTrendChart = ({
                 "0.06em",
             }}
           >
+            {/* [DATA: DYNAMIC] HORIZON TREND — % change first→last burn record */}
             Horizon Trend
           </Typography>
 
@@ -946,7 +959,7 @@ const ForecastTrendChart = ({
           </Typography>
         </Box>
 
-        {/* PERIODS */}
+        {/* [DATA: DYNAMIC] PERIODS — count of API records in the horizon */}
 
         <Box
           sx={{
@@ -1010,7 +1023,7 @@ const ForecastTrendChart = ({
           px: 2,
         }}
       >
-        {/* BURN */}
+        {/* [DATA: STATIC-UI] chart legend labels ("Burn" / "Replenishment") */}
 
         <Stack
           direction="row"
@@ -1194,7 +1207,7 @@ const ForecastTrendChart = ({
               }}
             />
 
-            {/* AVERAGE BURN */}
+            {/* [DATA: DYNAMIC] AVERAGE BURN — mean of the API burn (Input) records */}
 
             <ReferenceLine
               y={averageBurn}
@@ -1315,6 +1328,7 @@ const ForecastTrendChart = ({
                 "0.04em",
             }}
           >
+            {/* [DATA: DYNAMIC] Lowest Projected — min burn from API records */}
             Lowest Projected
           </Typography>
 
@@ -1356,6 +1370,7 @@ const ForecastTrendChart = ({
                 "0.04em",
             }}
           >
+            {/* [DATA: DYNAMIC] Avg Supply — mean Replenishment from API records */}
             Avg Supply
           </Typography>
 

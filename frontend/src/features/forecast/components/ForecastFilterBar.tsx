@@ -15,10 +15,11 @@ import RestartAltRoundedIcon from "@mui/icons-material/RestartAltRounded";
  * FORECAST FILTER BAR - DEPRECATED/UNUSED
  * =====================================================
  * 
- * WARNING: This component contains HARDCODED power station names
- * and is NOT currently imported or used anywhere in the application.
+ * [DATA: MOCK] WARNING: hardcoded power-station names and model names —
+ * NOT imported anywhere in the app (dead code).
  * 
- * HARDCODED STATIONS: Kendal, Matla, Tutuka, Lethabo
+ * [DATA: MOCK] HARDCODED STATIONS: Kendal, Matla, Tutuka, Lethabo
+ * [DATA: MOCK] HARDCODED MODELS: ARIMA, LSTM, XGBoost (pipeline is XGBoost-only)
  * 
  * If this component is ever reactivated, it MUST be updated to:
  * 1. Use useForecastEntities() hook to fetch stations dynamically
