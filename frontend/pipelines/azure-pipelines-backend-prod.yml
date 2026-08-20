@@ -1,0 +1,89 @@
+# Fires on release/* -> main merges. Blue/green via a plain Service color-
+# selector flip, with a manual approval gate (configured on the ADO
+# "COAL-STOCKPILE-PROD" Environment in project settings, not expressible in
+# YAML -- see docs/RUNBOOK.md) before cutover.
+trigger:
+  branches:
+    include:
+      - main
+
+pr: none
+
+variables:
+  environmentName: prod
+  adoEnvironmentName: COAL-STOCKPILE-PROD
+  namespace: app-coal-stockpile-prod
+  overlayPath: k8s/overlays/prod/backend
+  workloadKey: backend
+  imageRepository: eskom-forecast-api
+  serviceName: eskom-forecast-api
+  acrName: PLACEHOLDER_ACR_NAME_PROD
+  # ARM service connection for prod's own AKS cluster, used for everything:
+  # az acr login and az aks command invoke (see dev/qa's pipelines and
+  # docs/ARCHITECTURE.md for why no direct kubectl session is used). Prod
+  # gets its own cluster/connection -- not shared with dev/qa's nonprod one.
+  azureServiceConnection: PLACEHOLDER_AZURE_SERVICE_CONNECTION_PROD
+  resourceGroup: PLACEHOLDER_RESOURCE_GROUP_PROD
+  aksClusterName: PLACEHOLDER_AKS_CLUSTER_NAME_PROD
+
+stages:
+  - template: templates/validate-stage.yml
+    parameters:
+      overlayPath: ${{ variables.overlayPath }}
+
+  - template: templates/build-scan-push.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      acrName: ${{ variables.acrName }}
+      imageRepository: ${{ variables.imageRepository }}
+      dockerfilePath: "."
+      buildContext: "."
+      baseImageRef: "python:3.11-slim"
+      baseImageBuildArgName: PYTHON_BASE_IMAGE
+      mirroredBaseRepo: "base/python:3.11-slim"
+      passCorporateCA: true
+
+  - template: templates/deploy-stage.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      environmentName: ${{ variables.environmentName }}
+      adoEnvironmentName: ${{ variables.adoEnvironmentName }}
+      namespace: ${{ variables.namespace }}
+      overlayPath: ${{ variables.overlayPath }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      resourceGroup: ${{ variables.resourceGroup }}
+      aksClusterName: ${{ variables.aksClusterName }}
+      acrName: ${{ variables.acrName }}
+      imageRepository: ${{ variables.imageRepository }}
+      serviceName: ${{ variables.serviceName }}
+      imageTag: $[ stageDependencies.BuildScanPush_backend.BuildScanPush.outputs['setImageTag.imageTag'] ]
+      colorEnabled: true
+
+  - template: templates/smoke-test-stage.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      environmentName: ${{ variables.environmentName }}
+      namespace: ${{ variables.namespace }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      resourceGroup: ${{ variables.resourceGroup }}
+      aksClusterName: ${{ variables.aksClusterName }}
+      imageRepository: ${{ variables.imageRepository }}
+      serviceName: ${{ variables.serviceName }}
+      colorEnabled: true
+      workloadKind: backend
+
+  # cutover-stage.yml's deployment job targets the "COAL-STOCKPILE-PROD" ADO
+  # Environment -- add a manual approval check to that Environment in
+  # project settings so this stage pauses for sign-off before the
+  # selector flip runs.
+  - template: templates/cutover-stage.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      environmentName: ${{ variables.environmentName }}
+      adoEnvironmentName: ${{ variables.adoEnvironmentName }}
+      namespace: ${{ variables.namespace }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      resourceGroup: ${{ variables.resourceGroup }}
+      aksClusterName: ${{ variables.aksClusterName }}
+      serviceName: ${{ variables.serviceName }}
