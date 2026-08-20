@@ -1,0 +1,11 @@
+export const QUERY_KEYS = {
+  FORECAST_CHART: "forecast-chart",
+  FORECAST_RESULTS: "forecast-results",
+  FORECAST_STATISTICS: "forecast-statistics",
+
+  DASHBOARD: "dashboard",
+
+  POWER_STATIONS: "power-stations",
+
+  MODEL_PERFORMANCE: "model-performance",
+} as const;
