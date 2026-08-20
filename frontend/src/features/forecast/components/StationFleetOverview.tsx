@@ -22,8 +22,7 @@ import { useForecastContext } from "../../../contexts/ForecastContext";
  * [DATA: DYNAMIC] rows are built from GET /api/scenario-data
  * (scenario_id "actual" only), grouped by entity_id — so the station
  * names themselves come from the backend data, NOT from a hardcoded
- * list. This component keeps working even while /api/entities is
- * missing. Clicking a row sets the global station filter.
+ * list. Clicking a row sets the global station filter.
  *
  * [DATA: STATIC-UI] panel title/subtitle, bar colors, t/d vs t unit.
  */

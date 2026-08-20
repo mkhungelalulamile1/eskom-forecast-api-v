@@ -64,12 +64,10 @@ interface WeatherEntity {
  * GET /api/weather-data?entity_id=… (Open-Meteo cache on the backend).
  * No mock weather numbers in this component.
  *
- * [DATA: DYNAMIC — ENDPOINT MISSING] the station tab strip is fed by
- * useForecastEntities() → GET /api/entities, which the backend does not
- * expose yet → no tabs render and the "ensure entity exists" effect
- * never corrects the mock default "entity_1" (weather then loads for a
- * station id the backend doesn't know — backend falls back to its
- * default station, Kendal).
+ * [DATA: DYNAMIC] station correction uses useForecastEntities() →
+ * GET /api/entities (fallback: /api/scenario-data). If the current
+ * entityId is empty or unknown, it snaps to the first live station
+ * so weather is requested for a real power station.
  *
  * [DATA: USER-STATE] current / 7-day / 30-day view switch.
  */

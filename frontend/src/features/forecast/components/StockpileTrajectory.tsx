@@ -83,19 +83,10 @@ const StockpileTrajectory = ({
    * DYNAMIC FORECAST ENTITIES
    * --------------------------------------------------------
    *
-   * Stations/entities are retrieved from the backend through
-   * the same hook used by ForecastContextBar.
-   *
-   * This means:
-   *
-   * Backend entities
-   *       ↓
-   * useForecastEntities()
-   *       ↓
-   * ForecastContextBar / this component
-   *
-   * If a station is added or removed from the backend,
-   * the frontend automatically receives the new list.
+   * [DATA: DYNAMIC] Stations come from useForecastEntities()
+   * (GET /api/entities, fallback /api/scenario-data) — the same
+   * live list as ForecastContextBar. If that call fails, the
+   * caption below the chart shows "Unable to load station information."
    */
   const {
     data: forecastEntities,
@@ -943,6 +934,8 @@ const StockpileTrajectory = ({
 
       {/* =====================================================
           ENTITY ERROR
+          [DATA: DYNAMIC] Only if GET /api/entities AND the
+          /api/scenario-data fallback both fail. Not mock text.
           ===================================================== */}
 
       {entitiesError && (

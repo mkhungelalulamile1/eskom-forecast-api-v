@@ -26,14 +26,15 @@ import {
  *                              scenario_id column: actual, weather_hot_dry,
  *                              weather_hot_wet, weather_cold_dry, weather_cold_wet)
  *
- *   GET /api/entities        → ⚠️ DOES NOT EXIST on the backend yet
- *                              (main.py has no such route → 404). Until it
- *                              is added, useForecastEntities() returns an
- *                              empty list and the Power Station dropdown
- *                              shows "No stations available".
+ *   GET /api/entities        → unique entity_id list from those gold files
+ *                              ([{id, label}, ...]). If that call fails or
+ *                              returns empty, getEntities() derives the same
+ *                              list from /api/scenario-data so the Power
+ *                              Station dropdown still fills.
  *
- * No mock/hardcoded records are returned by this service — if the API
- * fails, react-query surfaces the error and the UI shows its error state.
+ * No mock/hardcoded station names or forecast records are returned here.
+ * If every API call fails, react-query surfaces the error and the UI
+ * shows its error state.
  */
 class ForecastService {
   private readonly baseUrl = "/api";
@@ -59,21 +60,55 @@ class ForecastService {
   }
 
   /**
-   * [DATA: DYNAMIC — ENDPOINT MISSING] GET /api/entities.
+   * [DATA: DYNAMIC] Power-station list for the dropdown.
    *
-   * Intended to return the definitive power-station list extracted from
-   * the scenario parquet files, but the backend (main.py) does not expose
-   * /api/entities yet, so this currently 404s and callers fall back to an
-   * empty list. Needed from engineers: add the route (or derive stations
-   * client-side from /api/scenario-data like StationFleetOverview does).
+   * Primary: GET /api/entities → [{id, label}, ...] from gold parquet.
+   * Fallback: unique entity_id values from GET /api/scenario-data
+   * (same source StationFleetOverview already uses). Both paths are live
+   * backend data — neither is a hardcoded station list.
    */
   async getEntities(): Promise<ForecastEntity[]> {
-    const response =
-      await axios.get<ForecastEntity[]>(
-        `${this.baseUrl}/entities`
-      );
+    try {
+      const response =
+        await axios.get<ForecastEntity[]>(
+          `${this.baseUrl}/entities`
+        );
 
-    return response.data;
+      if (
+        Array.isArray(response.data) &&
+        response.data.length > 0
+      ) {
+        return response.data;
+      }
+    } catch {
+      // Dedicated endpoint missing or failed — derive from scenario payload.
+    }
+
+    return this.entitiesFromScenarioData();
+  }
+
+  /**
+   * [DATA: DYNAMIC] Unique stations taken from /api/scenario-data
+   * (daily + monthly). Used when GET /api/entities is empty or unreachable.
+   */
+  private async entitiesFromScenarioData(): Promise<ForecastEntity[]> {
+    const scenarioData =
+      await this.getScenarioData();
+
+    const ids = new Set<string>();
+
+    for (const record of [
+      ...(scenarioData.daily ?? []),
+      ...(scenarioData.monthly ?? []),
+    ]) {
+      if (record.entity_id) {
+        ids.add(String(record.entity_id));
+      }
+    }
+
+    return Array.from(ids)
+      .sort((a, b) => a.localeCompare(b))
+      .map((id) => ({ id, label: id }));
   }
 
   /**
@@ -131,7 +166,7 @@ class ForecastService {
    * [DATA: DYNAMIC] KPI numbers (Average/Peak Forecast, Projected Volume,
    * Forecast Horizon) are computed client-side from the same
    * /api/scenario-data records — no separate stats endpoint. All zeros
-   * when the filter matches nothing (e.g. the mock default entity "entity_1").
+   * when the filter matches nothing (e.g. before a station has been selected).
    */
   async getStatistics(
     filters: ForecastFilters
@@ -237,30 +272,6 @@ class ForecastService {
         filteredRecords
       );
     }
-
-    // Debug trace of the applied filters (dev aid, not user-facing data).
-    console.log(
-      "[ForecastService] Filtering forecast:",
-      {
-        horizon:
-          filters.horizon,
-
-        entityId:
-          filters.entityId,
-
-        scenario:
-          filters.scenario,
-
-        backendScenarioId,
-
-        totalRecords:
-          records.length,
-
-        filteredRecords:
-          filteredRecords.length,
-      }
-    );
-
 
     return filteredRecords;
   }

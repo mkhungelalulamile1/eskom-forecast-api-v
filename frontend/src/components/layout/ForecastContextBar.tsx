@@ -56,18 +56,16 @@ interface ForecastContextBarProps {
  *                         "Tactical (Daily)" / "Strategic (Monthly)".
  *  - Metric dropdown     [DATA: STATIC-UI + USER-STATE] fixed options
  *                         burn / supply / stockpile.
- *  - Power Station       [DATA: DYNAMIC — ENDPOINT MISSING] options come
- *                         from useForecastEntities() → GET /api/entities,
- *                         which the backend does not expose yet → the list
- *                         is empty and the select shows "No stations
- *                         available"; the selection stays on the mock
- *                         default "entity_1" (matches no real station).
+ *  - Power Station       [DATA: DYNAMIC] options from useForecastEntities()
+ *                         → GET /api/entities (fallback: unique entity_ids
+ *                         in /api/scenario-data). Snaps to the first live
+ *                         station when the current selection is empty.
  *  - Scenario dropdown   [DATA: STATIC-UI + USER-STATE] fixed 5 options
  *                         mapped 1:1 to backend scenario_id values.
  *  - Export CSV          [DATA: DYNAMIC] exportAction prop renders
  *                         ExportForecast (live records → CSV).
- *  - Reset button        [DATA: STATIC-UI] restores hardcoded defaults
- *                         (daily / burn / actual / first station).
+ *  - Reset button        [DATA: STATIC-UI] restores defaults
+ *                         (daily / burn / actual / first live station).
  *
  * Behaviour: expanded at top, sticks while scrolling, compacts after 40px.
  */
@@ -228,9 +226,8 @@ const ForecastContextBar = ({
 
 
   /**
-   * [DATA: DYNAMIC] Self-heal: if the selected entityId is not in the
-   * fetched entity list, snap to the first available station. Currently
-   * inert because /api/entities 404s and the list is always empty.
+   * [DATA: DYNAMIC] Self-heal: if the selected entityId is empty or not
+   * in the fetched entity list, snap to the first live station.
    */
 
   useEffect(() => {
@@ -728,9 +725,8 @@ const ForecastContextBar = ({
         </Field>
 
 
-        {/* [DATA: DYNAMIC — ENDPOINT MISSING] POWER STATION — options should
-            come from GET /api/entities (backend route doesn't exist yet), so
-            today this renders "No stations available" and nothing is selectable. */}
+        {/* [DATA: DYNAMIC] POWER STATION — options from GET /api/entities
+            (fallback: unique entity_ids in /api/scenario-data). */}
 
         <Field
           label="Power Station"
@@ -738,7 +734,15 @@ const ForecastContextBar = ({
         >
 
           <Select
-            value={entityId}
+            value={
+              forecastEntities.some(
+                (entity) =>
+                  entity.id === entityId
+              )
+                ? entityId
+                : ""
+            }
+            displayEmpty
             onChange={
               handleEntityChange
             }
@@ -754,7 +758,7 @@ const ForecastContextBar = ({
           >
 
             {entitiesLoading && (
-              <MenuItem disabled>
+              <MenuItem value="" disabled>
                 Loading stations…
               </MenuItem>
             )}
@@ -762,7 +766,7 @@ const ForecastContextBar = ({
 
             {!entitiesLoading &&
               forecastEntities.length === 0 && (
-                <MenuItem disabled>
+                <MenuItem value="" disabled>
                   No stations available
                 </MenuItem>
               )}

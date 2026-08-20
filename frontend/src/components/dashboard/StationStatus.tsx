@@ -1,6 +1,7 @@
 // Used ONLY by the unrouted Dashboard page.
-// [DATA: DYNAMIC — ENDPOINT MISSING] station list would come from
-// GET /api/entities (route doesn't exist) → renders empty.
+// [DATA: DYNAMIC] station list from GET /api/entities
+// (fallback: unique entity_ids in /api/scenario-data).
+// [DATA: STATIC-UI] the green "active" chip is a hardcoded status, not a live health check.
 import {
   CircularProgress,
   Stack,

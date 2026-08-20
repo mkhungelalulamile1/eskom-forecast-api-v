@@ -235,6 +235,60 @@ def get_scenario_predictions_json(config: Config) -> dict:
     return data
 
 
+def get_entities_json(config: Config) -> list:
+    """
+    [DATA: DYNAMIC] Unique power-station list for the SPA dropdown.
+
+    Built from the `entity_id` column of gold/{daily,monthly}/scenario_predictions.parquet
+    (falls back to predictions.parquet for a horizon if the scenario file is missing).
+    Returns [{id, label}, ...] sorted by id. Empty list if no gold files exist yet.
+
+    The React SPA already expects this shape (forecast.service.getEntities → GET /api/entities).
+    Station names are whatever the pipeline wrote (e.g. Arnot, Kendal) — nothing is hardcoded here.
+    """
+
+    ids = set()
+    sources = []
+    for key in ["daily", "monthly"]:
+        sources.append(
+            (
+                f"{key}/scenario_predictions.parquet",
+                os.path.join(config.local_gold_dir, key, "scenario_predictions.parquet"),
+            )
+        )
+        sources.append(
+            (
+                f"{key}/predictions.parquet",
+                os.path.join(config.local_gold_dir, key, "predictions.parquet"),
+            )
+        )
+
+    for blob_name, local_path in sources:
+        try:
+            df = read_parquet(
+                config=config,
+                container=config.gold_container,
+                blob_name=blob_name,
+                local_path=local_path,
+            )
+        except FileNotFoundError:
+            continue
+        except Exception as e:
+            # One missing/unreadable horizon must not take down the whole station list.
+            logging.warning(f"Skipping {blob_name} while building entity list: {e}")
+            continue
+
+        if df is None or df.empty or "entity_id" not in df.columns:
+            continue
+
+        for value in df["entity_id"].dropna().unique():
+            entity_id = str(value).strip()
+            if entity_id:
+                ids.add(entity_id)
+
+    return [{"id": entity_id, "label": entity_id} for entity_id in sorted(ids)]
+
+
 def get_metrics_json(config: Config) -> list:
     """
     Reads model metrics from Azure Blob Storage or the local filesystem.

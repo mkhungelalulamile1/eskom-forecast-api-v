@@ -88,12 +88,9 @@ export const useForecastStatistics = (
 
 
 /**
- * [DATA: DYNAMIC — ENDPOINT MISSING] Intended to load the station list
- * from GET /api/entities, but the backend exposes no such route today,
- * so this resolves to an error/empty list and the Power Station dropdown
- * shows "No stations available" (and entityId stays on its mock default
- * "entity_1", which matches no real station). Engineer ask: add
- * /api/entities or derive stations from /api/scenario-data.
+ * [DATA: DYNAMIC] Station list from GET /api/entities, with a live
+ * fallback to unique entity_ids in GET /api/scenario-data. Cached 10 min.
+ * Once this resolves, ForecastContextBar snaps entityId to the first station.
  */
 
 export const useForecastEntities = () => {
