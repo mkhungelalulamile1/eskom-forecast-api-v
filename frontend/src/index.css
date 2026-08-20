@@ -1,0 +1,223 @@
+body {
+  margin: 0;
+  font-family: 'Inter', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* ============================================================
+   CARD RADIUS GUARANTEE
+   ============================================================
+   Belt-and-suspenders: force every MUI Paper/Card surface to a single
+   12px radius. Double-class selectors give higher specificity than the
+   single-class emotion styles MUI injects at runtime, so no card can
+   render any other radius (e.g. a stale cached emotion class).
+   ============================================================ */
+.MuiPaper-root.MuiPaper-root,
+.MuiCard-root.MuiCard-root,
+.MuiDialog-paper.MuiDialog-paper {
+  border-radius: 12px !important;
+}
+
+/* Force on ALL dynamically generated MUI classes */
+[class*="MuiPaper-root"],
+[class*="MuiCard-root"],
+[class*="css-"] {
+  border-radius: 12px !important;
+}
+
+/* Specific override for emotion-generated classes */
+div[class^="css-"],
+div[class*=" css-"] {
+  border-radius: 12px !important;
+}
+
+/* ============================================================
+   OVERFLOW PROTECTION - Prevent content from escaping cards
+   ============================================================ */
+.MuiCard-root,
+.MuiPaper-root {
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Ensure all child content respects card boundaries */
+.MuiCard-root>*,
+.MuiPaper-root>* {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Typography overflow handling */
+.MuiTypography-root {
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  hyphens: auto !important;
+}
+
+/* ============================================================
+   CUSTOM SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c3d0e3;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9fb2cc;
+  background-clip: content-box;
+  border: 2px solid transparent;
+}
+
+/* ============================================================
+   ENTRANCE + MICRO ANIMATIONS
+   ============================================================ */
+@keyframes eskomFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes eskomFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes eskomPulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes eskomPing {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  80%,
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+@keyframes eskomSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes eskomShimmer {
+  0% {
+    background-position: -468px 0;
+  }
+
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+/* utility classes */
+.eskom-fade-up {
+  animation: eskomFadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.eskom-fade-in {
+  animation: eskomFadeIn 0.5s ease both;
+}
+
+.eskom-spin {
+  animation: eskomSpin 1s linear infinite;
+}
+
+.eskom-pulse {
+  animation: eskomPulse 1.6s ease-in-out infinite;
+}
+
+/* staggered entrance helper */
+.eskom-stagger>* {
+  opacity: 0;
+  animation: eskomFadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.eskom-stagger>*:nth-child(1) {
+  animation-delay: 0.02s;
+}
+
+.eskom-stagger>*:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.eskom-stagger>*:nth-child(3) {
+  animation-delay: 0.14s;
+}
+
+.eskom-stagger>*:nth-child(4) {
+  animation-delay: 0.20s;
+}
+
+.eskom-stagger>*:nth-child(5) {
+  animation-delay: 0.26s;
+}
+
+.eskom-stagger>*:nth-child(6) {
+  animation-delay: 0.32s;
+}
+
+.eskom-stagger>*:nth-child(7) {
+  animation-delay: 0.38s;
+}
+
+.eskom-stagger>*:nth-child(8) {
+  animation-delay: 0.44s;
+}
+
+.eskom-stagger>*:nth-child(9) {
+  animation-delay: 0.50s;
+}
+
+.eskom-stagger>*:nth-child(10) {
+  animation-delay: 0.56s;
+}
