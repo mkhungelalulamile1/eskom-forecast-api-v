@@ -1,4 +1,4 @@
-// App shell: providers + router only — no data. See routes/AppRoutes.tsx for pages.
+// App shell: [DATA: none] providers + router only. See routes/AppRoutes.tsx for pages.
 import AppRoutes from "./routes/AppRoutes";
 
 const App = () => {

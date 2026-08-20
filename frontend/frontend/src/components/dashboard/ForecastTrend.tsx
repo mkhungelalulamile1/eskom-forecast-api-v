@@ -1,4 +1,4 @@
-// Used ONLY by DashboardContent (unrouted DashboardPage). See that component for
+// Used ONLY by DashboardContent (unrouted DashboardPage) — [DATA: DYNAMIC]. See that component for
 // its data-source tags; the routed Forecast page uses features/…/ForecastTrendChart.
 import { useMemo, useState } from "react";
 
