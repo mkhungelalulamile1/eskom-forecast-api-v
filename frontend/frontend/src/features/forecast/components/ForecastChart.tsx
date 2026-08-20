@@ -1,3 +1,5 @@
+// UNUSED COMPONENT (orphan) — partially wired (context + own fetch), not imported
+// by any page. See its own comments; do not treat as the live chart (ForecastTrendChart is).
 import { useEffect, useState } from "react";
 
 import { Box, CircularProgress, Typography } from "@mui/material";

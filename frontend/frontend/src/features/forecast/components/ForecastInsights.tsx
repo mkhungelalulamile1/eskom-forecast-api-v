@@ -38,6 +38,18 @@ import {
 } from "../hooks/useForecast";
 
 
+/**
+ * FORECAST INSIGHTS — 4 mini cards (Peak Burn, Peak vs Average, Lowest
+ * Stockpile, Stockpile Risk) + generated narrative + risk alert.
+ *
+ * [DATA: DYNAMIC] every number is derived client-side from
+ * useForecastChart() records (Input = burn, Stockpile = stockpile) out
+ * of /api/scenario-data. Narrative/alert text is templated around those
+ * dynamic values — no hardcoded insights.
+ *
+ * [DATA: STATIC-UI] card titles, icons, risk-threshold wording (e.g.
+ * "negative periods" phrasing) and colors.
+ */
 interface ForecastInsightsProps {
   filters: ForecastFilters;
 }

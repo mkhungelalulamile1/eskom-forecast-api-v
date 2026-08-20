@@ -1,3 +1,5 @@
+// UNUSED COMPONENT (orphan) — [DATA: DYNAMIC] wraps useForecastChart (/api/scenario-data),
+// but is not imported by any page. No mock data inside.
 import {
   Box,
   Chip,

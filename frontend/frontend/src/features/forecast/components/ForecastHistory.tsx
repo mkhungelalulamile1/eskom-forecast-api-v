@@ -1,3 +1,5 @@
+// UNUSED COMPONENT (orphan) — [DATA: MOCK] contains a hardcoded demo history
+// (see its own WARNING comments). Not imported by any page.
 import {
   CheckCircleRounded,
   ErrorRounded,

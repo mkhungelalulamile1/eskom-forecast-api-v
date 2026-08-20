@@ -642,6 +642,46 @@ def refresh_weather_cache_route():
         return JSONResponse({"status": "Failed", "error": str(e)}, status_code=500)
 
 
+# =============================================================================
+# API SURFACE — what the backend exposes, and where each response comes from.
+#
+# READ ENDPOINTS (dynamic; served from Azure Blob Storage when configured,
+# otherwise from local parquet under data/ — local files may originate from
+# generate_mock_data.py in dev, i.e. "real pipeline, possibly mock input"):
+#
+#   GET  /api/forecast-data            gold/{daily,monthly}/predictions.parquet
+#                                      (entity_id, event_date, horizon_step,
+#                                       Input, Replenishment; Stockpile derived)
+#   GET  /api/scenario-data            gold/{daily,monthly}/scenario_predictions.parquet
+#                                      (+ scenario_id: actual, weather_hot_dry,
+#                                       weather_hot_wet, weather_cold_dry,
+#                                       weather_cold_wet, + label)
+#   GET  /api/forecast-metrics         metrics/model_metrics.parquet
+#                                      (rmse/mae/smape/r2/nrmse per
+#                                       horizon+target+entity_id)
+#   GET  /api/forecast-metrics-by-step metrics/model_metrics_by_step.parquet
+#                                      (same metrics per horizon_step)
+#   GET  /api/oot-history              metrics/oot_history.parquet
+#                                      ({Input,Replenishment,Stockpile}_actual/
+#                                       _predicted per entity+date)
+#   GET  /api/weather-data             Open-Meteo cache per station
+#                                      (data/weather/weather_cache_<Station>.parquet)
+#   GET  /api/inference-monitoring[/summary]  in-memory event log (monitoring.py;
+#                                      resets on process restart)
+#   GET  /api/db-operations            in-memory SQL ingest log (ingest.py)
+#   GET  /api/initialize-progress      in-memory pipeline progress dict
+#
+# ACTION ENDPOINTS:
+#   POST /api/ingest-bronze-data       pull real data from Azure SQL → Bronze
+#   POST /api/run-forecast             train/score pipeline (mock bronze if no SQL)
+#   POST /api/refresh-weather-cache    refresh Open-Meteo caches
+#   POST /api/initialize               full initialize pipeline
+#
+# NOTE: the SPA also calls GET /api/entities (forecast.service.getEntities)
+# for the Power Station dropdown — that route does NOT exist below yet.
+# =============================================================================
+
+
 @app.get("/api/forecast-data")
 def forecast_data():
     """Serves prediction data as JSON."""
@@ -668,7 +708,7 @@ def scenario_data():
 
 @app.get("/api/forecast-metrics")
 def forecast_metrics():
-    """Serves per-entity, per-dimension model accuracy metrics (RMSE/MAE/MAPE/SMAPE) as JSON."""
+    """Serves per-entity, per-dimension model accuracy metrics (RMSE/MAE/SMAPE/R2/NRMSE) as JSON."""
     try:
         config = Config()
         data = get_metrics_json(config)

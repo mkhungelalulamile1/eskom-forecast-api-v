@@ -1,3 +1,5 @@
+// Used ONLY by DashboardContent, which belongs to the unrouted DashboardPage.
+// [DATA: DYNAMIC] wraps useWeatherSummary (/api/weather-data) — no mock data.
 import {
   Box,
   Stack,

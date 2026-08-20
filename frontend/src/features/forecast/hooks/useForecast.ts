@@ -11,12 +11,15 @@ import {
 
 import forecastService from "../service/forecast.service";
 
-
 /**
- * =====================================================
- * FORECAST CHART
- * =====================================================
+ * FORECAST HOOKS — [DATA: DYNAMIC] every hook wraps a live service call
+ * (see forecast.service.ts for the exact endpoints and their parquet
+ * sources). None of these hooks return mock data; failures propagate to
+ * the components' loading/error states.
  */
+
+/** [DATA: DYNAMIC] Filtered /api/scenario-data records for charts/KPIs. */
+
 
 export const useForecastChart = (
   filters?: ForecastFilters
@@ -38,12 +41,9 @@ export const useForecastChart = (
 };
 
 
-/**
- * =====================================================
- * FORECAST RESULTS
- * =====================================================
- */
 
+
+/** [DATA: DYNAMIC] Same records as the chart hook (tables/export consumers). */
 export const useForecastResults = (
   filters?: ForecastFilters
 ) => {
@@ -64,12 +64,9 @@ export const useForecastResults = (
 };
 
 
-/**
- * =====================================================
- * FORECAST STATISTICS
- * =====================================================
- */
 
+
+/** [DATA: DYNAMIC] Average/Peak/Projected Volume/Horizon (client-side stats). */
 export const useForecastStatistics = (
   filters?: ForecastFilters
 ) => {
@@ -91,12 +88,12 @@ export const useForecastStatistics = (
 
 
 /**
- * =====================================================
- * FORECAST ENTITIES
- * =====================================================
- *
- * Gets the available power stations/entities
- * directly from the backend.
+ * [DATA: DYNAMIC — ENDPOINT MISSING] Intended to load the station list
+ * from GET /api/entities, but the backend exposes no such route today,
+ * so this resolves to an error/empty list and the Power Station dropdown
+ * shows "No stations available" (and entityId stays on its mock default
+ * "entity_1", which matches no real station). Engineer ask: add
+ * /api/entities or derive stations from /api/scenario-data.
  */
 
 export const useForecastEntities = () => {
@@ -118,21 +115,9 @@ export const useForecastEntities = () => {
 
 
 /**
- * =====================================================
- * SCENARIO FORECAST DATA
- * =====================================================
- *
- * Gets all scenario forecast data from:
- *
- * GET /api/scenario-data
- *
- * The backend provides:
- *
- * actual
- * weather_hot_dry
- * weather_hot_wet
- * weather_cold_dry
- * weather_cold_wet
+ * [DATA: DYNAMIC] GET /api/scenario-data — full payload with scenario_id
+ * values: actual, weather_hot_dry, weather_hot_wet, weather_cold_dry,
+ * weather_cold_wet. Cached 5 min.
  */
 
 export const useForecastScenarioData = () => {

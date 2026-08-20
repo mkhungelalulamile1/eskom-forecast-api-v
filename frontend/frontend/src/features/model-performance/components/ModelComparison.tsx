@@ -16,6 +16,12 @@ import {
 import AppCard from "../../../components/common/AppCard";
 import CardHeader from "../../../components/common/CardHeader";
 
+/**
+ * ⚠️ UNUSED COMPONENT — not imported by any routed page.
+ * [DATA: MOCK] `models` below (v2.2–v2.4, "98.6%" etc.) is hardcoded
+ * demo data. There is no backend endpoint for model-version metadata.
+ */
+
 
 
 interface ModelVersion {

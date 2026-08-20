@@ -47,6 +47,23 @@ interface ForecastContextValue {
   reset: () => void;
 }
 
+/**
+ * FORECAST CONTEXT — global filter state for both routed pages
+ * (Forecast + Model Performance).
+ *
+ * [DATA: USER-STATE] horizon/metric/entityId/scenario are client-side
+ * selections, not fetched data. They drive which backend records the
+ * services filter for.
+ *
+ * [DATA: MOCK] DEFAULT_ENTITY_ID = "entity_1" is a leftover mock id —
+ * no real parquet entity is called "entity_1" (real ids are "Arnot",
+ * "Kendal", ...). Until /api/entities exists (or this default is fixed),
+ * the app boots with a station selection that matches NO records, so
+ * every KPI/chart renders empty/zero on first load.
+ *
+ * [DATA: STATIC-UI] the remaining defaults (daily/burn/actual) are
+ * acceptable UI defaults that do exist in the backend data.
+ */
 const ForecastContext =
   createContext<
     ForecastContextValue | undefined
@@ -62,6 +79,9 @@ const DEFAULT_HORIZON: ForecastHorizon =
 const DEFAULT_METRIC: ForecastMetric =
   "burn";
 
+// [DATA: MOCK] leftover demo id — does not match any real entity_id in
+// gold/scenario_predictions.parquet. First-load data is empty until the
+// user picks a real station (or this is fixed / served by /api/entities).
 const DEFAULT_ENTITY_ID =
   "entity_1";
 

@@ -4,7 +4,14 @@ import {
 
 import modelPerformanceService from "../service/model-performance.service";
 
+/**
+ * [DATA: DYNAMIC] react-query wrappers over the model-performance service.
+ * Cache: 5 min staleTime, no refetch on window focus. If the endpoints
+ * fail, react-query exposes isError and the components render their
+ * error/empty states — nothing mock is substituted.
+ */
 
+/** [DATA: DYNAMIC] GET /api/forecast-metrics (cached 5 min). */
 export const useModelMetrics = () => {
   return useQuery({
     queryKey: [
@@ -24,6 +31,7 @@ export const useModelMetrics = () => {
 };
 
 
+/** [DATA: DYNAMIC] GET /api/oot-history (cached 5 min). */
 export const useOotHistory = () => {
   return useQuery({
     queryKey: [

@@ -8,22 +8,28 @@ import {
 } from "../types/weather.types";
 
 
+/**
+ * WEATHER SERVICE — [DATA: DYNAMIC] everything here is derived from one
+ * live backend endpoint:
+ *
+ *   GET /api/weather-data?entity_id=...&start_date=...&end_date=...
+ *     → ui.get_weather_json() → weather.get_weather_timeseries()
+ *     → per-station Open-Meteo cache (data/weather/weather_cache_<Station>.parquet)
+ *       or a live Open-Meteo fetch on cache miss.
+ *
+ * Summary/Outlook/Signals below are all client-side aggregations of that
+ * one dynamic response — no mock weather data anywhere in this service.
+ */
 class WeatherService {
 
   private readonly baseUrl = "/api";
 
 
   /**
-   * =====================================================
-   * RAW WEATHER DATA
-   * =====================================================
-   *
-   * Gets weather data for an entity.
-   *
-   * startDate and endDate are optional.
-   *
-   * When supplied, the backend returns the exact
-   * requested date range.
+   * [DATA: DYNAMIC] GET /api/weather-data — raw daily weather records
+   * (temp, rainfall, wind, UV, humidity, sunshine, weather_code/label).
+   * Without start/end dates the backend returns its default dashboard
+   * window (90 days back + 16 days forecast).
    */
   async getWeatherData(
     entityId: string,
@@ -66,11 +72,7 @@ class WeatherService {
   }
 
 
-  /**
-   * =====================================================
-   * SORT WEATHER DATA
-   * =====================================================
-   */
+  /** [DATA: DYNAMIC] Chronological sort of the API records (no data change). */
 
   private sortRecords(
     records: WeatherRecord[]
@@ -94,9 +96,8 @@ class WeatherService {
 
 
   /**
-   * =====================================================
-   * WEATHER SUMMARY
-   * =====================================================
+   * [DATA: DYNAMIC] Latest-record snapshot ("current weather" tile) —
+   * computed client-side from the last row of GET /api/weather-data.
    */
 
   async getWeatherSummary(
@@ -135,9 +136,8 @@ class WeatherService {
 
 
   /**
-   * =====================================================
-   * WEATHER OUTLOOK
-   * =====================================================
+   * [DATA: DYNAMIC] First `days` records of the same API response
+   * (forecast outlook strip). No mock values.
    */
 
   async getWeatherOutlook(
@@ -181,9 +181,8 @@ class WeatherService {
 
 
   /**
-   * =====================================================
-   * WEATHER SIGNALS
-   * =====================================================
+   * [DATA: DYNAMIC] Averages/totals (temp, rainfall, wind, UV, humidity,
+   * rainy/hot days) derived client-side from the outlook records.
    */
 
   async getWeatherSignals(

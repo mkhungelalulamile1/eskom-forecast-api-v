@@ -4,6 +4,12 @@ import {
 
 import weatherService from "../service/weather.service";
 
+/**
+ * WEATHER HOOKS — [DATA: DYNAMIC] thin react-query wrappers over
+ * weather.service (GET /api/weather-data). Enabled only when an entityId
+ * is selected; no mock fallbacks.
+ */
+
 import {
   WeatherRecord,
   WeatherSummaryData,

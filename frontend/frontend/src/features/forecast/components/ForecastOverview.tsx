@@ -13,29 +13,19 @@ import { useForecastContext } from "../../../contexts/ForecastContext";
 import { ForecastFilters } from "../types/forecast.types";
 
 /**
- * =====================================================
- * FORECAST OVERVIEW
- * =====================================================
+ * FORECAST OVERVIEW — layout only, no data of its own.
  *
- * Dashboard layout:
+ * [DATA: DYNAMIC] every child fetches live backend data; see each
+ * component's header for its endpoint and client-side derivations:
  *
- *  1. KPI ticker row
+ *  1. KPI ticker row          — ForecastStatistics (/api/scenario-data)
+ *  2. Trend + Scenario        — ForecastTrendChart + ScenarioComparison
+ *                               (Burn + Supply / Baseline + Scenario)
+ *  3. Weather Intelligence    — WeatherIntelligence (/api/weather-data)
+ *  4. Stockpile + insights    — StockpileTrajectory + ForecastInsights
+ *  5. Fleet + correlation     — StationFleetOverview + WeatherCorrelation
  *
- *  2. Forecast Trend + Scenario Comparison
- *     - ForecastTrendChart
- *       Burn + Supply
- *
- *     - ScenarioComparison
- *       Baseline + Selected Scenario
- *
- *  3. Weather Intelligence
- *
- *  4. Stockpile trajectory + insights
- *
- *  5. Station fleet + weather correlation
- *
- * The ForecastTrendChart and ScenarioComparison are kept
- * side-by-side on desktop and stack on smaller screens.
+ * Trend + Scenario sit side-by-side on desktop, stacked on small screens.
  */
 const ForecastOverview = () => {
   const {

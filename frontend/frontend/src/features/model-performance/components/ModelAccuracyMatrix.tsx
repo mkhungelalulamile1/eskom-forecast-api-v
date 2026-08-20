@@ -47,6 +47,19 @@ type Status =
 
 
 
+/**
+ * MODEL ACCURACY MATRIX — stations × targets (Burn/Supply/Stockpile)
+ * grid of NRMSE values with good/warning/poor chips.
+ *
+ * [DATA: DYNAMIC] rows come from GET /api/forecast-metrics filtered by
+ * horizon (daily→"tactical", monthly→"strategic") and the three model
+ * targets. Station rows and their values are read straight from the
+ * backend records — nothing hardcoded. (The entityId prop is accepted
+ * but deliberately unused: this grid always shows the whole fleet.)
+ *
+ * [DATA: STATIC-UI] column headers, chip wording and the NRMSE
+ * thresholds that decide good/warning/poor status colors.
+ */
 const ModelAccuracyMatrix = ({
   horizon,
   entityId,

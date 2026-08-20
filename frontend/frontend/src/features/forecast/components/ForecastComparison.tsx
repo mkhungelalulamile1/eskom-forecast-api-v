@@ -1,3 +1,5 @@
+// UNUSED COMPONENT (orphan) — [DATA: DYNAMIC] reads the forecast context, but is
+// not imported by any page. No mock data inside.
 import { useEffect, useState } from "react";
 
 import {
