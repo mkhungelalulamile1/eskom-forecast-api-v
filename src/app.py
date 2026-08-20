@@ -312,21 +312,27 @@ def fill_time_series_gaps(df: pd.DataFrame) -> pd.DataFrame:
         # -----------------------------------------------------
         # MONTHLY
         #
-        # Your Bronze monthly dataset is month-end based:
+        # Bronze's monthly dataset is month-start based:
         #
-        # 2014-01-31
-        # 2014-02-28
-        # 2014-03-31
-        # 2014-04-30
+        # 2014-01-01
+        # 2014-02-01
+        # 2014-03-01
+        # 2014-04-01
         #
-        # Therefore use MonthEnd rather than MonthStart.
+        # Therefore use MonthStart, not MonthEnd -- reindexing onto "ME"
+        # against month-start data has zero overlap with the real index, so
+        # every row (not just the gaps) comes back NaN, which is silently
+        # "recoverable" by ffill/bfill only when at least one real value
+        # survives the reindex; here none do, so Input/Replenishment end up
+        # 100% NaN for every entity and downstream training's label is
+        # entirely NaN.
         # -----------------------------------------------------
         else:
 
             full_range = pd.date_range(
                 start=group.index.min(),
                 end=group.index.max(),
-                freq="ME",
+                freq="MS",
             )
 
         # -----------------------------------------------------
@@ -611,6 +617,20 @@ def convert_df_to_stack(df: pd.DataFrame, horizon: int, horizon_key: str = None,
     # the same origin-feature values, mirroring how lag_features is broadcast
     # across horizon steps above.
     if origin_features is not None:
+        weather_cols = [c for c in weather.WEATHER_FEATURE_COLS if c in stacked_df.columns]
+
+        # Move the weather columns (added into `record` above, so currently
+        # sitting right after the lag features) to the end before merging
+        # origin_features on -- training.py builds each row as lag_features,
+        # then origin_features, then weather (see training.py's own record
+        # dict), and XGBoost's booster checks feature *order*, not just
+        # names, against the order seen at training time. Without this,
+        # predicting here raises a feature_names mismatch even though both
+        # sides have the exact same columns.
+        stacked_df = stacked_df[
+            [c for c in stacked_df.columns if c not in weather_cols] + weather_cols
+        ]
+
         stacked_df = stacked_df.merge(
             origin_features,
             left_on=["entity_id", "origin_date"],
@@ -618,6 +638,13 @@ def convert_df_to_stack(df: pd.DataFrame, horizon: int, horizon_key: str = None,
             how="left",
             suffixes=("", "_origin"),
         ).drop(columns=["event_date_origin"])
+
+        # The merge appended origin_features' columns after weather; move
+        # weather back to the end so the final order matches training's
+        # lag -> origin -> weather exactly.
+        stacked_df = stacked_df[
+            [c for c in stacked_df.columns if c not in weather_cols] + weather_cols
+        ]
 
     print(f"Stacking complete. Restructured into {len(stacked_df)} stacked rows.")
     return stacked_df

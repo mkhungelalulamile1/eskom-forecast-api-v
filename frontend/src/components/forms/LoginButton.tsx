@@ -1,3 +1,4 @@
+// [DATA: STATIC-UI] submit button for the simulated (mock) login form.
 import { Button, CircularProgress } from "@mui/material";
 
 interface LoginButtonProps {
@@ -15,7 +16,7 @@ const LoginButton = ({
       disabled={loading}
       sx={{
         height: 56,
-        borderRadius: "12px",
+        borderRadius: 3,
         fontSize: 16,
         fontWeight: 700,
         textTransform: "none",

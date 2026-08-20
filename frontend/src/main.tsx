@@ -1,3 +1,4 @@
+// [DATA: none] alternate entry bootstrap.
 import React from "react";
 import ReactDOM from "react-dom/client";
 

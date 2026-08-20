@@ -1,3 +1,5 @@
+// /inference-monitoring (hidden route). [DATA: DYNAMIC] activity rows from the
+// live monitoring events.
 import React from "react";
 
 import {
@@ -127,7 +129,7 @@ const ResourceActivityTable = ({
   return (
     <Card
       sx={{
-        borderRadius: "12px",
+        borderRadius: 3,
       }}
     >
       <CardContent>

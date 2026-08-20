@@ -1,3 +1,5 @@
+// UNUSED COMPONENT (orphan) — [DATA: DYNAMIC] fetches /api/weather-data directly via axios;
+// superseded by WeatherIntelligence's built-in outlook view. Not imported by any page.
 import {
   Box,
   Stack,
@@ -31,14 +33,6 @@ import {
   WeatherRecord,
 } from "../types/weather.types";
 
-
-
-import {
-  cardBorderColor,
-  cardFill,
-  softBorder,
-  softText,
-} from "../../../theme/surfaces";
 
 /* ======================================================
    TYPES
@@ -292,13 +286,16 @@ const WeatherOutlook = ({
           width: "100%",
           minHeight: 420,
 
-          bgcolor: cardFill,
+          bgcolor:
+            "background.paper",
 
-          border: "1px solid",
+          border:
+            "1px solid",
 
-          borderColor: cardBorderColor,
+          borderColor:
+            "divider",
 
-          borderRadius: "12px",
+          borderRadius: 4,
 
           p: {
             xs: 2.5,
@@ -333,13 +330,16 @@ const WeatherOutlook = ({
         sx={{
           width: "100%",
 
-          bgcolor: cardFill,
+          bgcolor:
+            "background.paper",
 
-          border: "1px solid",
+          border:
+            "1px solid",
 
-          borderColor: cardBorderColor,
+          borderColor:
+            "divider",
 
-          borderRadius: "12px",
+          borderRadius: 4,
 
           p: {
             xs: 2.5,
@@ -379,13 +379,16 @@ const WeatherOutlook = ({
         width: "100%",
         minWidth: 0,
 
-        bgcolor: cardFill,
+        bgcolor:
+          "background.paper",
 
-        border: "1px solid",
+        border:
+          "1px solid",
 
-        borderColor: cardBorderColor,
+        borderColor:
+          "divider",
 
-        borderRadius: "12px",
+        borderRadius: 4,
 
         p: {
           xs: 2.5,
@@ -501,7 +504,7 @@ const WeatherOutlook = ({
         <Box
           sx={{
             p: 2.5,
-            borderRadius: "12px",
+            borderRadius: 3,
             bgcolor:
               "rgba(245, 124, 0, 0.07)",
             border:
@@ -552,7 +555,7 @@ const WeatherOutlook = ({
         <Box
           sx={{
             p: 2.5,
-            borderRadius: "12px",
+            borderRadius: 3,
             bgcolor:
               "rgba(18, 100, 255, 0.07)",
             border:
@@ -603,7 +606,7 @@ const WeatherOutlook = ({
         <Box
           sx={{
             p: 2.5,
-            borderRadius: "12px",
+            borderRadius: 3,
             bgcolor:
               "rgba(46, 125, 50, 0.07)",
             border:
@@ -654,7 +657,7 @@ const WeatherOutlook = ({
         <Box
           sx={{
             p: 2.5,
-            borderRadius: "12px",
+            borderRadius: 3,
             bgcolor:
               "rgba(69, 90, 100, 0.07)",
             border:
@@ -671,7 +674,8 @@ const WeatherOutlook = ({
 
             <AirRounded
               sx={{
-                color: softText,
+                color:
+                  "#455A64",
               }}
             />
 
@@ -818,8 +822,9 @@ const WeatherOutlook = ({
                   "Temperature",
                 ]}
                 contentStyle={{
-                  borderRadius: "12px",
-                  border: "1px solid #E2E7EF",
+                  borderRadius: 12,
+                  border:
+                    "1px solid #E3E8EF",
                   boxShadow:
                     "0 10px 30px rgba(0,0,0,0.08)",
                 }}

@@ -1,0 +1,82 @@
+# Fires on release/* pushes only. Blue/green via a plain Service color-
+# selector flip (see docs/ARCHITECTURE.md).
+trigger:
+  branches:
+    include:
+      - release/*
+
+pr: none
+
+variables:
+  environmentName: qa
+  adoEnvironmentName: COAL-STOCKPILE-QA
+  namespace: app-coal-stockpile-qa
+  overlayPath: k8s/overlays/qa/frontend
+  workloadKey: frontend
+  imageRepository: coalstockpilefrontend
+  serviceName: coalstockpilefrontend
+  acrName: MAZACRSANDTINONPROD
+  azureServiceConnection: DTI-NONPROD-AZURE-CONNECTION
+  resourceGroup: SAN-DTI-NONPROD-RG
+  aksClusterName: MAZ-AKS-SAN-DTI-NonProd
+
+stages:
+  - template: templates/validate-stage.yml
+    parameters:
+      overlayPath: ${{ variables.overlayPath }}
+
+  - template: templates/build-scan-push.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      acrName: ${{ variables.acrName }}
+      imageRepository: ${{ variables.imageRepository }}
+      dockerfilePath: "frontend"
+      buildContext: "frontend"
+      baseImageRef: "nginx:1.27-alpine"
+      baseImageBuildArgName: NGINX_BASE_IMAGE
+      mirroredBaseRepo: "base/nginx:1.27-alpine"
+      # apk upgrade (Dockerfile) is a RUN-step network call like backend's
+      # apt-get/curl -- needs the proxy build-args to reach Alpine's package
+      # mirrors from this proxy-only-egress agent.
+      passCorporateCA: true
+
+  - template: templates/deploy-stage.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      environmentName: ${{ variables.environmentName }}
+      adoEnvironmentName: ${{ variables.adoEnvironmentName }}
+      namespace: ${{ variables.namespace }}
+      overlayPath: ${{ variables.overlayPath }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      resourceGroup: ${{ variables.resourceGroup }}
+      aksClusterName: ${{ variables.aksClusterName }}
+      acrName: ${{ variables.acrName }}
+      imageRepository: ${{ variables.imageRepository }}
+      serviceName: ${{ variables.serviceName }}
+      imageTag: $[ stageDependencies.BuildScanPush_frontend.BuildScanPush.outputs['setImageTag.imageTag'] ]
+      colorEnabled: true
+
+  - template: templates/smoke-test-stage.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      environmentName: ${{ variables.environmentName }}
+      namespace: ${{ variables.namespace }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      resourceGroup: ${{ variables.resourceGroup }}
+      aksClusterName: ${{ variables.aksClusterName }}
+      imageRepository: ${{ variables.imageRepository }}
+      serviceName: ${{ variables.serviceName }}
+      colorEnabled: true
+      workloadKind: frontend
+
+  - template: templates/cutover-stage.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      environmentName: ${{ variables.environmentName }}
+      adoEnvironmentName: ${{ variables.adoEnvironmentName }}
+      namespace: ${{ variables.namespace }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      resourceGroup: ${{ variables.resourceGroup }}
+      aksClusterName: ${{ variables.aksClusterName }}
+      serviceName: ${{ variables.serviceName }}

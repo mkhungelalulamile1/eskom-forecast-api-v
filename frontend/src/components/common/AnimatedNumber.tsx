@@ -1,3 +1,5 @@
+// [DATA: DYNAMIC] Animates a value passed in by the caller (KPI cards) — the
+// number itself always comes from the parent's API data.
 import { useEffect, useRef, useState } from "react";
 
 /**

@@ -1,3 +1,5 @@
+// ⚠️ /inference page is routed but HIDDEN from the sidebar navigation.
+// [DATA: MOCK] the `logs` array below is a hardcoded demo list.
 import { useState, useMemo } from "react";
 import {
   CheckCircleRounded,
@@ -211,7 +213,7 @@ const ResourceLogs = () => {
 
                 borderColor: "divider",
 
-                borderRadius: "12px",
+                borderRadius: 3,
 
               }}
 

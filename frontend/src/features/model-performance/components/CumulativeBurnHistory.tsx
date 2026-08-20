@@ -5,7 +5,6 @@ import {
 } from "@mui/material";
 
 import {
-  StackedLineChartRounded,
   TimelineRounded,
   TrendingUpRounded,
 } from "@mui/icons-material";
@@ -24,14 +23,6 @@ import {
   useOotHistory,
 } from "../hooks/useModelPerformance";
 
-
-
-import {
-  infoTint,
-  raisedFill,
-  softBorder,
-  softText,
-} from "../../../theme/surfaces";
 
 /**
  * ======================================================
@@ -135,6 +126,18 @@ interface CumulativeBurnHistoryProps {
  * ======================================================
  */
 
+/**
+ * CUMULATIVE BURN/CUMULATIVE METRIC HISTORY — running-sum chart of
+ * actual vs predicted across the out-of-time sample.
+ *
+ * [DATA: DYNAMIC] built from GET /api/oot-history (same records as the
+ * OOT chart) filtered by station + horizon, then cumulatively summed
+ * client-side per date for the selected metric
+ * (Input/Replenishment/Stockpile × _actual/_predicted). No mock data.
+ *
+ * [DATA: STATIC-UI] metric labels/subtitles ("Burn", "Supply",
+ * "Stockpile"), colors, axis formatting.
+ */
 const CumulativeBurnHistory = ({
   entityId,
   horizon,
@@ -420,9 +423,10 @@ const CumulativeBurnHistory = ({
     return (
       <Box
         sx={{
-          bgcolor: "transparent",
-          border: softBorder,
-          borderRadius: "12px",
+          bgcolor: "#FFFFFF",
+          border:
+            "1px solid #E2E7EF",
+          borderRadius: 4,
           p: {
             xs: 2.5,
             md: 4,
@@ -451,9 +455,10 @@ const CumulativeBurnHistory = ({
     return (
       <Box
         sx={{
-          bgcolor: "transparent",
-          border: softBorder,
-          borderRadius: "12px",
+          bgcolor: "#FFFFFF",
+          border:
+            "1px solid #E2E7EF",
+          borderRadius: 4,
           p: {
             xs: 2.5,
             md: 4,
@@ -484,9 +489,10 @@ const CumulativeBurnHistory = ({
   return (
     <Box
       sx={{
-        bgcolor: "transparent",
-        border: softBorder,
-        borderRadius: "12px",
+        bgcolor: "#FFFFFF",
+        border:
+          "1px solid #E2E7EF",
+        borderRadius: 4,
         p: {
           xs: 2.5,
           md: 4,
@@ -528,8 +534,8 @@ const CumulativeBurnHistory = ({
             sx={{
               width: 44,
               height: 44,
-              borderRadius: "12px",
-              bgcolor: infoTint,
+              borderRadius: 3,
+              bgcolor: "#EEF4FF",
               color: "#1264FF",
               display: "flex",
               alignItems: "center",
@@ -537,7 +543,7 @@ const CumulativeBurnHistory = ({
               flexShrink: 0,
             }}
           >
-            <StackedLineChartRounded />
+            <TimelineRounded />
           </Box>
 
 
@@ -550,7 +556,7 @@ const CumulativeBurnHistory = ({
             <Typography
               variant="h5"
               fontWeight={800}
-              color="text.primary"
+              color="#172B4D"
             >
               {selectedMetric.label} History — Actual vs Predicted
             </Typography>
@@ -583,9 +589,9 @@ const CumulativeBurnHistory = ({
             sx={{
               px: 1.5,
               py: 0.75,
-              borderRadius: "10px",
-              bgcolor: raisedFill,
-              color: softText,
+              borderRadius: 2,
+              bgcolor: "#F4F6F9",
+              color: "#536176",
               fontSize: 13,
               fontWeight: 700,
               whiteSpace: "nowrap",
@@ -601,8 +607,8 @@ const CumulativeBurnHistory = ({
             sx={{
               px: 1.5,
               py: 0.75,
-              borderRadius: "10px",
-              bgcolor: infoTint,
+              borderRadius: 2,
+              bgcolor: "#EEF4FF",
               color: "#1264FF",
               fontSize: 13,
               fontWeight: 700,
@@ -617,9 +623,9 @@ const CumulativeBurnHistory = ({
             sx={{
               px: 1.5,
               py: 0.75,
-              borderRadius: "10px",
-              bgcolor: raisedFill,
-              color: softText,
+              borderRadius: 2,
+              bgcolor: "#F4F6F9",
+              color: "#536176",
               fontSize: 13,
               fontWeight: 700,
               whiteSpace: "nowrap",
@@ -662,7 +668,7 @@ const CumulativeBurnHistory = ({
 
             <Typography
               fontWeight={700}
-              color="text.secondary"
+              color="#536176"
             >
               No {selectedMetric.label.toLowerCase()} history data
             </Typography>
@@ -792,13 +798,15 @@ const CumulativeBurnHistory = ({
                 }}
 
                 contentStyle={{
-                  borderRadius: "12px",
-                  border: "1px solid #E2E7EF",
+                  borderRadius: 12,
+                  border:
+                    "1px solid #E2E7EF",
                   boxShadow:
                     "0 10px 30px rgba(0,0,0,0.08)",
                 }}
 
                 labelStyle={{
+                  color: "#172B4D",
                   fontWeight: 700,
                   marginBottom: 6,
                 }}

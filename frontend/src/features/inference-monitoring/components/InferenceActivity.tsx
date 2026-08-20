@@ -1,3 +1,5 @@
+// /inference-monitoring (hidden route). [DATA: DYNAMIC] activity feed from the
+// live monitoring events.
 import React from "react";
 
 import {
@@ -126,7 +128,7 @@ const InferenceActivity = ({
   return (
     <Card
       sx={{
-        borderRadius: "12px",
+        borderRadius: 3,
       }}
     >
       <CardContent>

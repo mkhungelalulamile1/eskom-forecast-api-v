@@ -1,10 +1,12 @@
+// ⚠️ /inference page is routed but HIDDEN from the sidebar navigation.
+// [DATA: DYNAMIC] fetches live inference history via axios (unlike the
+// other /inference components on this page, which are mock).
 import { useState, useMemo } from "react";
 import {
   CheckCircleRounded,
   ErrorRounded,
   ScheduleRounded,
 } from "@mui/icons-material";
-
 
 import {
   Avatar,
@@ -15,92 +17,91 @@ import {
   Typography,
 } from "@mui/material";
 
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 
 import AppCard from "../../../components/common/AppCard";
 import CardHeader from "../../../components/common/CardHeader";
 import FilterBar, { FilterConfig } from "../../../components/common/FilterBar";
 import ViewSwitcher, { ViewMode } from "../../../components/common/ViewSwitcher";
 
-/**
- * DEMO DATA — the run history below is placeholder content for the
- * inference page. Station names here are examples only; the real
- * power-station list always comes from the backend.
- */
-
-
-
-interface InferenceRun {
-
-  id: number;
-
-  station: string;
-
-  model: string;
-
-  scenario: string;
-
-  duration: string;
-
-  time: string;
-
-  status:
-  | "Completed"
-  | "Running"
-  | "Failed";
-
+// Backend interface for inference runs from /api/inference-monitoring/summary
+interface BackendInferenceRun {
+  run_id: string;
+  horizon: string;
+  trigger: string;
+  started_at: string;
+  completed_at: string | null;
+  duration_ms: number | null;
+  status: "running" | "success" | "failed" | "degraded";
+  resource_failures: number;
+  resource_warnings: number;
 }
 
+// Frontend interface for transformed inference runs displayed in UI
+interface InferenceRun {
+  id: string;
+  horizon: string;
+  trigger: string;
+  duration: string;
+  time: string;
+  status: "Completed" | "Running" | "Failed";
+}
 
+// Fetches inference runs from /api/inference-monitoring/summary and transforms to frontend format
+const fetchInferenceRuns = async (): Promise<InferenceRun[]> => {
+  const response = await axios.get<{
+    runs: BackendInferenceRun[];
+  }>("/api/inference-monitoring/summary");
 
-const history: InferenceRun[] = [
+  // Transform backend data to frontend structure
+  return response.data.runs.map((run) => {
+    // Extract time from timestamp
+    const time = run.started_at
+      ? new Date(run.started_at).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })
+      : "--";
 
-  {
-    id: 5012,
-    station: "Arnot",
-    model: "Burn Forecast Model v2.4",
-    scenario: "Tactical Daily",
-    duration: "4.8 sec",
-    time: "10:32",
-    status: "Completed",
-  },
+    // Format duration
+    const duration = run.duration_ms
+      ? `${(run.duration_ms / 1000).toFixed(1)} sec`
+      : "--";
 
+    // Map backend status to frontend status
+    let status: "Completed" | "Running" | "Failed";
+    if (run.status === "success" || run.status === "degraded") {
+      status = "Completed";
+    } else if (run.status === "running") {
+      status = "Running";
+    } else {
+      status = "Failed";
+    }
 
-  {
-    id: 5011,
-    station: "Kendal",
-    model: "Supply Forecast Model v2.4",
-    scenario: "Hot & Dry",
-    duration: "6.1 sec",
-    time: "09:45",
-    status: "Completed",
-  },
+    return {
+      id: run.run_id,
+      horizon: run.horizon === "daily" ? "Tactical Daily" : "Strategic Monthly",
+      trigger: run.trigger,
+      duration,
+      time,
+      status,
+    };
+  });
+};
 
+// React Query hook to fetch and cache inference runs with 60s refresh
+const useInferenceRuns = () => {
+  return useQuery<InferenceRun[]>({
+    queryKey: ["inference-runs"],
+    queryFn: fetchInferenceRuns,
+    staleTime: 30 * 1000, // 30 seconds
+    refetchInterval: 60 * 1000, // Refresh every 60 seconds
+  });
+};
 
-  {
-    id: 5010,
-    station: "Medupi",
-    model: "Stockpile Forecast Model v2.3",
-    scenario: "Cold & Wet",
-    duration: "--",
-    time: "08:20",
-    status: "Running",
-  },
-
-
-  {
-    id: 5009,
-    station: "Tutuka",
-    model: "Burn Forecast Model v2.2",
-    scenario: "Actual",
-    duration: "--",
-    time: "07:15",
-    status: "Failed",
-  },
-
-
-];
-
-
+// Filter configs for status and horizon (no station filter - backend doesn't provide entity_id)
 const filterConfigs: FilterConfig[] = [
   {
     name: "status",
@@ -112,45 +113,43 @@ const filterConfigs: FilterConfig[] = [
     ],
   },
   {
-    name: "station",
-    label: "Station",
-    /*
-     * Derived from the run history itself rather than a hard-coded
-     * list, so the filter always matches the data on screen.
-     */
-    options: Array.from(
-      new Set(history.map((run) => run.station))
-    ).map((station) => ({ label: station, value: station })),
+    name: "horizon",
+    label: "Horizon",
+    options: [
+      { label: "Tactical Daily", value: "Tactical Daily" },
+      { label: "Strategic Monthly", value: "Strategic Monthly" },
+    ],
   },
 ];
 
-
-
-
+// Displays inference execution history from /api/inference-monitoring/summary
 const InferenceHistory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [viewMode, setViewMode] = useState<ViewMode>("list");
 
+  // Fetch real inference runs from backend
+  const { data: history = [], isLoading, isError } = useInferenceRuns();
+
   // Filter data based on search and filters
   const filteredHistory = useMemo(() => {
-    return history.filter((run) => {
+    return history.filter((run: InferenceRun) => {
       // Search filter
       const matchesSearch =
         !searchTerm ||
-        run.station.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        run.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        run.scenario.toLowerCase().includes(searchTerm.toLowerCase());
+        run.horizon.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        run.trigger.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        run.id.toLowerCase().includes(searchTerm.toLowerCase());
 
       // Status filter
       const matchesStatus = !filters.status || run.status === filters.status;
 
-      // Station filter
-      const matchesStation = !filters.station || run.station === filters.station;
+      // Horizon filter
+      const matchesHorizon = !filters.horizon || run.horizon === filters.horizon;
 
-      return matchesSearch && matchesStatus && matchesStation;
+      return matchesSearch && matchesStatus && matchesHorizon;
     });
-  }, [searchTerm, filters]);
+  }, [searchTerm, filters, history]);
 
 
   return (
@@ -185,281 +184,272 @@ const InferenceHistory = () => {
       <FilterBar
         filters={filterConfigs}
         onFilterChange={setFilters}
-        searchPlaceholder="Search by station, model, or scenario..."
+        searchPlaceholder="Search by run ID, horizon, or trigger..."
         onSearchChange={setSearchTerm}
       />
 
-      <Stack
-        spacing={3}
-        mt={2}
-        sx={{ maxHeight: 600, overflowY: "auto", overflowX: "hidden" }}
-      >
-        {filteredHistory.length === 0 ? (
-          <Box py={6}>
-            <Typography align="center" color="text.secondary">
-              No inference runs match your filters.
-            </Typography>
-          </Box>
-        ) : (
-          filteredHistory.map((run, index) => (
+      {isLoading && (
+        <Box py={6}>
+          <Typography align="center" color="text.secondary">
+            Loading inference runs...
+          </Typography>
+        </Box>
+      )}
+
+      {isError && (
+        <Box py={6}>
+          <Typography align="center" color="error">
+            Failed to load inference runs. Please try again.
+          </Typography>
+        </Box>
+      )}
+
+      {!isLoading && !isError && (
+        <Stack
+          spacing={3}
+          mt={2}
+          sx={{ maxHeight: 600, overflowY: "auto", overflowX: "hidden" }}
+        >
+          {filteredHistory.length === 0 ? (
+            <Box py={6}>
+              <Typography align="center" color="text.secondary">
+                No inference runs match your filters.
+              </Typography>
+            </Box>
+          ) : (
+            filteredHistory.map((run: InferenceRun, index: number) => (
 
 
-            <Box
-              key={run.id}
-            >
-
-
-              <Stack
-
-                direction={{
-                  xs: "column",
-                  md: "row",
-                }}
-
-                spacing={3}
-
-                alignItems={{
-                  md: "center",
-                }}
-
+              <Box
+                key={run.id}
               >
 
 
+                <Stack
 
-                <Avatar
+                  direction={{
+                    xs: "column",
+                    md: "row",
+                  }}
 
-                  sx={{
+                  spacing={3}
 
-                    bgcolor:
-
-                      run.status === "Completed"
-
-                        ?
-
-                        "#E8F5E9"
-
-                        :
-
-                        run.status === "Running"
-
-                          ?
-
-                          "#FFF8E1"
-
-                          :
-
-                          "#FDECEC",
-
-
-
-                    color:
-
-                      run.status === "Completed"
-
-                        ?
-
-                        "success.main"
-
-                        :
-
-                        run.status === "Running"
-
-                          ?
-
-                          "warning.main"
-
-                          :
-
-                          "error.main",
-
+                  alignItems={{
+                    md: "center",
                   }}
 
                 >
 
 
-                  {
-                    run.status === "Completed"
 
-                      ?
+                  <Avatar
 
-                      <CheckCircleRounded />
-
-                      :
-
-                      run.status === "Running"
-
-                        ?
-
-                        <ScheduleRounded />
-
-                        :
-
-                        <ErrorRounded />
-
-                  }
-
-
-                </Avatar>
-
-
-
-
-
-                <Box
-                  flex={1}
-                >
-
-
-                  <Typography
-                    fontWeight={700}
-                  >
-
-                    Inference #{run.id}
-
-                  </Typography>
-
-
-
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                  >
-
-                    {run.station} • {run.model}
-
-                  </Typography>
-
-
-
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                  >
-
-                    Scenario: {run.scenario}
-
-                  </Typography>
-
-
-                </Box>
-
-
-
-
-
-                <Box>
-
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                  >
-
-                    Duration
-
-                  </Typography>
-
-
-                  <Typography
-                    fontWeight={600}
-                  >
-
-                    {run.duration}
-
-                  </Typography>
-
-
-                </Box>
-
-
-
-
-
-                <Box>
-
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                  >
-
-                    Executed
-
-                  </Typography>
-
-
-                  <Typography
-                    fontWeight={600}
-                  >
-
-                    {run.time}
-
-                  </Typography>
-
-
-                </Box>
-
-
-
-
-
-                <Chip
-
-                  label={run.status}
-
-                  size="small"
-
-                  color={
-
-                    run.status === "Completed"
-
-                      ?
-
-                      "success"
-
-                      :
-
-                      run.status === "Running"
-
-                        ?
-
-                        "warning"
-
-                        :
-
-                        "error"
-
-                  }
-
-                />
-
-
-
-              </Stack>
-
-
-
-              {
-                index < filteredHistory.length - 1 &&
-                (
-                  <Divider
                     sx={{
-                      mt: 3,
+
+                      bgcolor:
+
+                        run.status === "Completed"
+
+                          ?
+
+                          "#E8F5E9"
+
+                          :
+
+                          run.status === "Running"
+
+                            ?
+
+                            "#FFF8E1"
+
+                            :
+
+                            "#FDECEC",
+
+
+
+                      color:
+
+                        run.status === "Completed"
+
+                          ?
+
+                          "success.main"
+
+                          :
+
+                          run.status === "Running"
+
+                            ?
+
+                            "warning.main"
+
+                            :
+
+                            "error.main",
+
                     }}
+
+                  >
+
+
+                    {
+                      run.status === "Completed"
+
+                        ?
+
+                        <CheckCircleRounded />
+
+                        :
+
+                        run.status === "Running"
+
+                          ?
+
+                          <ScheduleRounded />
+
+                          :
+
+                          <ErrorRounded />
+
+                    }
+
+
+                  </Avatar>
+
+
+
+
+
+                  <Box
+                    flex={1}
+                  >
+
+
+                    <Typography
+                      fontWeight={700}
+                    >
+
+                      {run.id}
+
+                    </Typography>
+
+
+
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                    >
+
+                      {run.horizon} • Trigger: {run.trigger}
+
+                    </Typography>
+
+
+
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                    >
+
+                      Duration: {run.duration}
+
+                    </Typography>
+
+
+                  </Box>
+
+
+
+
+
+                  <Box>
+
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                    >
+
+                      Executed
+
+                    </Typography>
+
+
+                    <Typography
+                      fontWeight={600}
+                    >
+
+                      {run.time}
+
+                    </Typography>
+
+
+                  </Box>
+
+
+
+
+
+                  <Chip
+
+                    label={run.status}
+
+                    size="small"
+
+                    color={
+
+                      run.status === "Completed"
+
+                        ?
+
+                        "success"
+
+                        :
+
+                        run.status === "Running"
+
+                          ?
+
+                          "warning"
+
+                          :
+
+                          "error"
+
+                    }
+
                   />
-                )
-              }
 
 
 
-            </Box>
-
-
-          ))
-        )
-        }
+                </Stack>
 
 
 
-      </Stack>
+                {
+                  index < filteredHistory.length - 1 &&
+                  (
+                    <Divider
+                      sx={{
+                        mt: 3,
+                      }}
+                    />
+                  )
+                }
+
+
+
+              </Box>
+
+
+            ))
+          )
+          }
+
+
+
+        </Stack>
+      )}
 
 
     </AppCard>

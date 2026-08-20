@@ -24,16 +24,6 @@ import {
 } from "../hooks/useModelPerformance";
 
 
-
-import {
-  cardBorderColor,
-  cardFill,
-  infoTint,
-  raisedFill,
-  softBorder,
-  softText,
-} from "../../../theme/surfaces";
-
 /*
  * ======================================================
  * OOT PERFORMANCE RECORD
@@ -130,6 +120,18 @@ interface OotPerformanceChartProps {
  * ======================================================
  */
 
+/**
+ * OOT PERFORMANCE CHART — Actual vs Predicted lines over the
+ * out-of-time sample for the selected station/horizon/metric.
+ *
+ * [DATA: DYNAMIC] series come from GET /api/oot-history records
+ * ({metric}_actual / {metric}_predicted) filtered client-side by
+ * entity_id + horizon (daily→"tactical", monthly→"strategic").
+ * No mock data; empty state renders when no records match.
+ *
+ * [DATA: STATIC-UI] title/subtitle, legend names ("Actual"/"Predicted"),
+ * colors, axis formatting.
+ */
 const OotPerformanceChart = ({
   entityId,
   horizon,
@@ -350,12 +352,13 @@ const OotPerformanceChart = ({
     return (
       <Box
         sx={{
-          bgcolor: cardFill,
+          bgcolor:
+            "background.paper",
 
           border: "1px solid",
-          borderColor: cardBorderColor,
+          borderColor: "divider",
 
-          borderRadius: "12px",
+          borderRadius: 12,
 
           p: 4,
 
@@ -384,12 +387,13 @@ const OotPerformanceChart = ({
     return (
       <Box
         sx={{
-          bgcolor: cardFill,
+          bgcolor:
+            "background.paper",
 
           border: "1px solid",
-          borderColor: cardBorderColor,
+          borderColor: "divider",
 
-          borderRadius: "12px",
+          borderRadius: 12,
 
           p: 4,
 
@@ -417,12 +421,13 @@ const OotPerformanceChart = ({
   return (
     <Box
       sx={{
-        bgcolor: cardFill,
+        bgcolor:
+          "background.paper",
 
         border: "1px solid",
-          borderColor: cardBorderColor,
+          borderColor: "divider",
 
-        borderRadius: "12px",
+        borderRadius: 12,
 
         p: {
           xs: 2.5,
@@ -468,9 +473,10 @@ const OotPerformanceChart = ({
               width: 44,
               height: 44,
 
-              borderRadius: "12px",
+              borderRadius: 3,
 
-              bgcolor: infoTint,
+              bgcolor:
+                "#EEF4FF",
 
               color:
                 "#1264FF",
@@ -532,11 +538,13 @@ const OotPerformanceChart = ({
               px: 1.5,
               py: 0.75,
 
-              borderRadius: "10px",
+              borderRadius: 2,
 
-              bgcolor: raisedFill,
+              bgcolor:
+                "#F4F6F9",
 
-              color: softText,
+              color:
+                "#536176",
 
               fontSize: 13,
 
@@ -557,9 +565,10 @@ const OotPerformanceChart = ({
               px: 1.5,
               py: 0.75,
 
-              borderRadius: "10px",
+              borderRadius: 2,
 
-              bgcolor: infoTint,
+              bgcolor:
+                "#EEF4FF",
 
               color:
                 "#1264FF",
@@ -620,7 +629,7 @@ const OotPerformanceChart = ({
 
             <Typography
               fontWeight={700}
-              color="text.secondary"
+              color="#536176"
             >
               No out-of-time
               performance data
@@ -756,18 +765,25 @@ const OotPerformanceChart = ({
                 }}
 
                 contentStyle={{
-                  borderRadius: "12px",
+                  borderRadius:
+                    12,
 
-                  border: "1px solid #E2E7EF",
+                  border: "1px solid",
+          borderColor: "divider",
 
                   boxShadow:
                     "0 10px 30px rgba(0,0,0,0.08)",
                 }}
 
                 labelStyle={{
-                  fontWeight: 700,
+                  color:
+                    "text.primary",
 
-                  marginBottom: 6,
+                  fontWeight:
+                    700,
+
+                  marginBottom:
+                    6,
                 }}
               />
 

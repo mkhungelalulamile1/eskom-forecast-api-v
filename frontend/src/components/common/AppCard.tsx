@@ -1,3 +1,4 @@
+// [DATA: STATIC-UI] presentational card container — content passed by caller.
 import React from "react";
 import { Card, CardProps } from "@mui/material";
 

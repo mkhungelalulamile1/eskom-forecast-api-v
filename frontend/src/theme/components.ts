@@ -32,14 +32,22 @@ export const getComponents = (
         },
         "*": { boxSizing: "border-box" },
         "#root": { minHeight: "100vh" },
+        // Force 12px border radius on ALL MUI cards and papers
+        ".MuiCard-root": {
+          borderRadius: "12px !important",
+        },
+        ".MuiPaper-root": {
+          borderRadius: "12px !important",
+        },
       },
     },
 
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: "12px !important",
           backgroundImage: "none",
+          overflow: "hidden",
         },
       },
     },
@@ -48,20 +56,12 @@ export const getComponents = (
       defaultProps: { elevation: 0 },
       styleOverrides: {
         root: {
-          /*
-           * Dark mode cards are transparent with a light hairline
-           * border instead of a filled panel, so no card renders as
-           * a solid block that swallows the values inside it.
-           */
-          backgroundColor: mode === "dark" ? "transparent" : "#FFFFFF",
-          borderRadius: 12,
-          border: `1px solid ${
-            mode === "dark" ? "rgba(255,255,255,0.55)" : "#E4EAF3"
-          }`,
+          borderRadius: "12px !important",
+          border: `1px solid ${mode === "dark" ? "#22334F" : "#E4EAF3"}`,
           boxShadow: mode === "dark"
             ? "0 8px 24px rgba(0,0,0,0.35)"
             : "0 8px 24px rgba(16,32,62,0.05)",
-          overflow: "hidden",
+          overflow: "hidden !important",
         },
       },
     },
@@ -116,56 +116,6 @@ export const getComponents = (
           paddingBottom: 14,
           borderBottom: `1px solid ${cellBorder}`,
           fontSize: "0.875rem",
-        },
-      },
-    },
-
-    MuiToggleButtonGroup: {
-      styleOverrides: {
-        root: {
-          gap: 8,
-          border: "none",
-          background: "transparent",
-        },
-        grouped: {
-          border: `1px solid ${border} !important`,
-          borderRadius: "10px !important",
-          marginLeft: "0 !important",
-        },
-      },
-    },
-
-    MuiToggleButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 10,
-          paddingInline: 16,
-          textTransform: "none",
-          color: mode === "dark" ? "#A7B4CC" : "#3B4A60",
-          backgroundColor: "transparent",
-          "&:hover": {
-            backgroundColor:
-              mode === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,84,166,0.06)",
-          },
-          "&.Mui-selected": {
-            backgroundColor:
-              mode === "dark" ? "rgba(24,144,215,0.24)" : "#E8F2FC",
-            color: mode === "dark" ? "#E7EDF7" : "#0054A6",
-            borderColor: mode === "dark" ? "rgba(79,181,234,0.7)" : "#0054A6",
-            "&:hover": {
-              backgroundColor:
-                mode === "dark" ? "rgba(24,144,215,0.32)" : "#DCEBFB",
-            },
-          },
-          "&.Mui-disabled": {
-            color: mode === "dark" ? "#A7B4CC" : "#5B6B84",
-            borderColor: border,
-          },
-          "&.Mui-selected.Mui-disabled": {
-            color: mode === "dark" ? "#E7EDF7" : "#0054A6",
-            backgroundColor:
-              mode === "dark" ? "rgba(24,144,215,0.24)" : "#E8F2FC",
-          },
         },
       },
     },

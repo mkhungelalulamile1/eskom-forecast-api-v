@@ -1,3 +1,5 @@
+// [DATA: DYNAMIC] Renders a sparkline of the series passed in (ForecastStatistics
+// feeds it the live /api/scenario-data records). No data of its own.
 import React from "react";
 import { Box } from "@mui/material";
 

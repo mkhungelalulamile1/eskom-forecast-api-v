@@ -1,3 +1,5 @@
+// /login — reachable by URL only (route guard is a hardcoded no-op).
+// [DATA: STATIC-UI + MOCK] static marketing text + simulated login form.
 import {
   AssessmentRounded,
   LogoutRounded,
@@ -165,7 +167,7 @@ to={item.path}
 
 sx={{
 
-borderRadius: "12px",
+borderRadius:4,
 
 mb:1,
 
@@ -253,7 +255,7 @@ p:3,
 
 sx={{
 
-borderRadius: "12px",
+borderRadius:4,
 
 }}
 

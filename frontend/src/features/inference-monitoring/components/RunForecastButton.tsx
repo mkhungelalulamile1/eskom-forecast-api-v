@@ -1,3 +1,5 @@
+// /inference-monitoring (hidden route). [DATA: DYNAMIC] action button POSTing the
+// real /api/run-forecast endpoint.
 import React, { useState } from "react";
 
 import {
@@ -213,7 +215,7 @@ const RunForecastButton = () => {
 
           px: 2,
 
-          borderRadius: "12px",
+          borderRadius: 2.5,
 
           textTransform:
             "none",

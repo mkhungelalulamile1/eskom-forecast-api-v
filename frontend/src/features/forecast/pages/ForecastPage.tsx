@@ -19,26 +19,13 @@ import {
 
 
 /**
- * =====================================================
- * FORECAST PAGE
- * =====================================================
- *
- * Page structure:
- *
- * Forecast Context
- *       ↓
- * Forecast Overview
- *
- * The Forecast Context is sticky and contains:
- *
- * - Horizon
- * - Metric
- * - Power Station
- * - Scenario
- * - Export CSV
- * - Reset
- *
- * The context bar becomes compact while scrolling.
+ * FORECAST PAGE — sticky ForecastContextBar (Horizon / Metric / Power
+ * Station / Scenario / Export CSV / Reset — see its per-control data
+ * tags) above ForecastOverview, which lays out every live card:
+ * KPI statistics, trend chart, scenario comparison, weather
+ * intelligence, stockpile trajectory, insights, station fleet and
+ * weather correlation. All children are [DATA: DYNAMIC] via
+ * /api/scenario-data and /api/weather-data — see each component.
  */
 
 const ForecastPage = () => {

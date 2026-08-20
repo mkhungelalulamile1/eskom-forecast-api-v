@@ -20,6 +20,7 @@ import DashboardSidebar from "../components/layout/DashboardSidebar";
  * =====================================================
  */
 
+// [DATA: STATIC-UI] Fixed per-route header strings — no backend data.
 const pageTitles: Record<
   string,
   {
@@ -168,7 +169,6 @@ const DashboardLayout = () => {
 
         <Box
           component="main"
-          className="eskom-scroll-container"
           sx={{
             flex: 1,
 
@@ -203,15 +203,6 @@ const DashboardLayout = () => {
              * from creating another scrollbar.
              */
             width: "100%",
-
-            /*
-             * Always reserve the scrollbar gutter and disable scroll
-             * anchoring. Panels that resize while scrolling (the sticky
-             * Forecast Context bar) used to add/remove the scrollbar and
-             * re-anchor the scroll position, which read as flickering.
-             */
-            scrollbarGutter: "stable",
-            overflowAnchor: "none",
           }}
         >
 

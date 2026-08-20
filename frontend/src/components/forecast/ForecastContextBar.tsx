@@ -1,3 +1,5 @@
+// Thin re-export stub of the layout ForecastContextBar — used ONLY by the
+// hidden /inference page. Data-source tags: see components/layout/ForecastContextBar.
 /**
  * =====================================================
  * FORECAST CONTEXT BAR (FORECAST-FOLDER RE-EXPORT)

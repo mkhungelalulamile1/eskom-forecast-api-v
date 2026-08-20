@@ -16,7 +16,6 @@ import {
 
 import {
   CloudRounded,
-  ScatterPlotRounded,
   InfoOutlined,
 } from "@mui/icons-material";
 
@@ -38,6 +37,18 @@ import {
 } from "../types/weather.types";
 
 
+/**
+ * WEATHER CORRELATION — Pearson correlations between weather variables
+ * (temperature, rainfall, wind, humidity, UV, sunshine) and forecast
+ * burn/supply.
+ *
+ * [DATA: DYNAMIC] correlations are computed client-side by joining two
+ * live endpoints by date: /api/scenario-data (forecast burn/supply) and
+ * /api/weather-data (weather series for the selected station). No mock
+ * numbers — if either series is empty the table renders empty.
+ *
+ * [DATA: STATIC-UI] variable labels, colors, table headers.
+ */
 interface WeatherCorrelationProps {
   filters: ForecastFilters;
 }
@@ -835,7 +846,7 @@ const forecastDates =
       sx={{
         width: "100%",
         height: "100%",
-        borderRadius: "12px",
+        borderRadius: 12,
       }}
     >
 
@@ -886,7 +897,7 @@ const forecastDates =
               sx={{
                 width: 42,
                 height: 42,
-                borderRadius: "10px",
+                borderRadius: 2,
                 display: "flex",
                 alignItems:
                   "center",
@@ -897,7 +908,7 @@ const forecastDates =
               }}
             >
 
-              <ScatterPlotRounded />
+              <CloudRounded />
 
             </Box>
 
@@ -1078,10 +1089,7 @@ const forecastDates =
 
             <Box
               sx={{
-                /* 150px label column + 7 x 92px value columns + gaps.
-                   Declared so the wrapper above scrolls when the card
-                   is narrower, instead of the grid escaping the card. */
-                minWidth: 850,
+                minWidth: 760,
               }}
             >
 
@@ -1093,7 +1101,7 @@ const forecastDates =
                   display: "grid",
 
                   gridTemplateColumns:
-                    "150px repeat(7, minmax(92px, 1fr))",
+                    "150px repeat(7, minmax(80px, 1fr))",
 
                   gap: 1,
 
@@ -1127,15 +1135,6 @@ const forecastDates =
                           variant="caption"
                           fontWeight={700}
                           color="text.secondary"
-                          sx={{
-                            /* keep header words whole — they used to
-                               break mid-word ("Temperatu re") */
-                            display: "block",
-                            whiteSpace: "nowrap",
-                            wordBreak: "keep-all",
-                            overflowWrap: "normal",
-                            fontSize: 11.5,
-                          }}
                         >
                           {
                             variable.label
@@ -1179,7 +1178,7 @@ const forecastDates =
                           alignItems:
                             "center",
                           px: 1.5,
-                          borderRadius: "10px",
+                          borderRadius: 2,
                           bgcolor:
                             "action.hover",
                         }}
@@ -1220,7 +1219,7 @@ const forecastDates =
                               justifyContent:
                                 "center",
 
-                              borderRadius: "10px",
+                              borderRadius: 2,
 
                               bgcolor:
                                 getCellBackground(
@@ -1297,7 +1296,7 @@ const forecastDates =
                     sx={{
                       width: 12,
                       height: 12,
-                      borderRadius: "8px",
+                      borderRadius: 1,
                       bgcolor:
                         "rgba(25,118,210,0.25)",
                     }}
@@ -1323,7 +1322,7 @@ const forecastDates =
                     sx={{
                       width: 12,
                       height: 12,
-                      borderRadius: "8px",
+                      borderRadius: 1,
                       bgcolor:
                         "rgba(211,47,47,0.25)",
                     }}

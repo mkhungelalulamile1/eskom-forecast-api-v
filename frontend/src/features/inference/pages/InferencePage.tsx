@@ -1,3 +1,7 @@
+// /inference is routed but HIDDEN from the sidebar navigation.
+// [DATA: MOCK] most children here (InferenceStatistics, PipelineStatus,
+// ResourceLogs, ApiMetrics, ErrorMonitor) render hardcoded demo data —
+// only InferenceHistory fetches live data. See each component's header.
 import { Stack } from "@mui/material";
 
 import ForecastContextBar from "../../../components/forecast/ForecastContextBar";

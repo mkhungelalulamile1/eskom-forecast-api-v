@@ -1,3 +1,4 @@
+// UNUSED. [DATA: none] presentational KPI card.
 import React from "react";
 
 import { Box, Typography } from "@mui/material";

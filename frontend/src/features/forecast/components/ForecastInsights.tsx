@@ -9,10 +9,7 @@ import {
 } from "@mui/material";
 
 import {
-  CheckCircleRounded,
-  TrendingDownRounded,
   AutoGraphRounded,
-  CompareArrowsRounded,
   TrendingUpRounded,
   WarningAmberRounded,
   ErrorOutlineRounded,
@@ -41,19 +38,18 @@ import {
 } from "../hooks/useForecast";
 
 
-
-import {
-  SurfaceValue,
-  cardBorderColor,
-  cardFill,
-  errorTint,
-  infoTint,
-  neutralFill,
-  softBorder,
-  successTint,
-  warningTint,
-} from "../../../theme/surfaces";
-
+/**
+ * FORECAST INSIGHTS — 4 mini cards (Peak Burn, Peak vs Average, Lowest
+ * Stockpile, Stockpile Risk) + generated narrative + risk alert.
+ *
+ * [DATA: DYNAMIC] every number is derived client-side from
+ * useForecastChart() records (Input = burn, Stockpile = stockpile) out
+ * of /api/scenario-data. Narrative/alert text is templated around those
+ * dynamic values — no hardcoded insights.
+ *
+ * [DATA: STATIC-UI] card titles, icons, risk-threshold wording (e.g.
+ * "negative periods" phrasing) and colors.
+ */
 interface ForecastInsightsProps {
   filters: ForecastFilters;
 }
@@ -64,7 +60,7 @@ interface InsightCardProps {
   value: string;
   description: string;
   icon: React.ReactNode;
-  backgroundColor: SurfaceValue;
+  backgroundColor: string;
   valueColor?: string;
 }
 
@@ -98,9 +94,8 @@ const InsightCard = ({
           xs: 1.75,
           sm: 2,
         },
-        borderRadius: "12px",
+        borderRadius: 2.5,
         backgroundColor,
-        border: softBorder,
         overflow: "hidden",
       }}
     >
@@ -440,10 +435,13 @@ const ForecastInsights = ({
         width: "100%",
         height: "100%",
         minWidth: 0,
-        bgcolor: cardFill,
-        border: "1px solid",
-        borderColor: cardBorderColor,
-        borderRadius: "12px",
+        bgcolor:
+          "background.paper",
+        border:
+          "1px solid",
+        borderColor:
+          "divider",
+        borderRadius: 12,
         p: {
           xs: 2.5,
           sm: 3,
@@ -492,8 +490,9 @@ const ForecastInsights = ({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              borderRadius: "12px",
-              backgroundColor: infoTint,
+              borderRadius: 2.5,
+              backgroundColor:
+                "#EEF4FF",
             }}
           >
             <AutoGraphRounded
@@ -643,7 +642,7 @@ const ForecastInsights = ({
                     }}
                   />
                 }
-                backgroundColor={neutralFill}
+                backgroundColor="#F6F8FC"
               />
 
 
@@ -661,7 +660,7 @@ const ForecastInsights = ({
                 )}%`}
                 description="Above average forecast"
                 icon={
-                  <CompareArrowsRounded
+                  <TrendingUpRounded
                     sx={{
                       color:
                         "#F57C00",
@@ -669,7 +668,7 @@ const ForecastInsights = ({
                     }}
                   />
                 }
-                backgroundColor={neutralFill}
+                backgroundColor="#F6F8FC"
               />
 
 
@@ -684,27 +683,22 @@ const ForecastInsights = ({
                 }
                 description="Minimum projected stockpile"
                 icon={
-                  lowestStockpile < 0 ? (
-                    <ErrorOutlineRounded
-                      sx={{
-                        color: "#D32F2F",
-                        fontSize: 21,
-                      }}
-                    />
-                  ) : (
-                    <TrendingDownRounded
-                      sx={{
-                        color: "#2E7D32",
-                        fontSize: 21,
-                      }}
-                    />
-                  )
+                  <ErrorOutlineRounded
+                    sx={{
+                      color:
+                        lowestStockpile <
+                          0
+                          ? "#D32F2F"
+                          : "#2E7D32",
+                      fontSize: 21,
+                    }}
+                  />
                 }
                 backgroundColor={
                   lowestStockpile <
                     0
-                    ? errorTint
-                    : successTint
+                    ? "#FFF6F6"
+                    : "#F6FAF7"
                 }
                 valueColor={
                   lowestStockpile <
@@ -731,27 +725,22 @@ const ForecastInsights = ({
                     : "Projected periods below zero"
                 }
                 icon={
-                  negativePeriods > 0 ? (
-                    <WarningAmberRounded
-                      sx={{
-                        color: "#F57C00",
-                        fontSize: 21,
-                      }}
-                    />
-                  ) : (
-                    <CheckCircleRounded
-                      sx={{
-                        color: "#2E7D32",
-                        fontSize: 21,
-                      }}
-                    />
-                  )
+                  <WarningAmberRounded
+                    sx={{
+                      color:
+                        negativePeriods >
+                          0
+                          ? "#F57C00"
+                          : "#2E7D32",
+                      fontSize: 21,
+                    }}
+                  />
                 }
                 backgroundColor={
                   negativePeriods >
                     0
-                    ? warningTint
-                    : successTint
+                    ? "#FFF8F0"
+                    : "#F6FAF7"
                 }
                 valueColor={
                   negativePeriods >
@@ -873,12 +862,12 @@ const ForecastInsights = ({
               sx={{
                 mt: 2.5,
                 p: 1.5,
-                borderRadius: "10px",
+                borderRadius: 2,
                 backgroundColor:
                   negativePeriods >
                     0
-                    ? warningTint
-                    : successTint,
+                    ? "#FFF8F0"
+                    : "#F2FAF4",
                 border:
                   "1px solid",
                 borderColor:
@@ -895,25 +884,18 @@ const ForecastInsights = ({
                 alignItems="flex-start"
               >
 
-                {negativePeriods > 0 ? (
-                  <WarningAmberRounded
-                    sx={{
-                      flexShrink: 0,
-                      color: "#F57C00",
-                      fontSize: 19,
-                      mt: 0.1,
-                    }}
-                  />
-                ) : (
-                  <CheckCircleRounded
-                    sx={{
-                      flexShrink: 0,
-                      color: "#2E7D32",
-                      fontSize: 19,
-                      mt: 0.1,
-                    }}
-                  />
-                )}
+                <WarningAmberRounded
+                  sx={{
+                    flexShrink: 0,
+                    color:
+                      negativePeriods >
+                        0
+                        ? "#F57C00"
+                        : "#2E7D32",
+                    fontSize: 19,
+                    mt: 0.1,
+                  }}
+                />
 
                 <Box>
 

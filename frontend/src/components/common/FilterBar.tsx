@@ -1,3 +1,5 @@
+// [DATA: USER-STATE] generic search/filter controls — used by unrouted dashboard
+// and hidden /inference components.
 import React, { useState } from "react";
 import {
     Box,

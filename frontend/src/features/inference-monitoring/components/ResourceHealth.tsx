@@ -1,3 +1,5 @@
+// /inference-monitoring (hidden route). [DATA: DYNAMIC] per-resource health from
+// the live monitoring summary.
 import React from "react";
 
 import {
@@ -240,7 +242,7 @@ const ResourceHealth = ({
   return (
     <Card
       sx={{
-        borderRadius: "12px",
+        borderRadius: 3,
         height: "100%",
       }}
     >
@@ -403,7 +405,7 @@ const ResourceHealth = ({
                         sx={{
                           width: 40,
                           height: 40,
-                          borderRadius: "10px",
+                          borderRadius: 2,
                           display: "flex",
                           alignItems:
                             "center",

@@ -24,7 +24,8 @@ import CardHeader from "../../../components/common/CardHeader";
  * PERFORMANCE HISTORY - DEPRECATED/UNUSED
  * =====================================================
  * 
- * WARNING: This component contains MOCK/HARDCODED data
+ * ⚠️ UNUSED COMPONENT — not imported by any routed page.
+ * [DATA: MOCK] This component contains MOCK/HARDCODED data
  * and is NOT currently imported or used anywhere in the application.
  * 
  * HARDCODED DATA:

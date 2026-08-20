@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 
 import WeatherIntelligence from "./WeatherIntelligence";
 import ForecastStatistics from "./ForecastStatistics";
@@ -13,37 +13,27 @@ import { useForecastContext } from "../../../contexts/ForecastContext";
 import { ForecastFilters } from "../types/forecast.types";
 
 /**
- * =====================================================
- * FORECAST OVERVIEW
- * =====================================================
+ * FORECAST OVERVIEW — layout only, no data of its own.
  *
- * Dashboard layout:
+ * [DATA: DYNAMIC] every child fetches live backend data; see each
+ * component's header for its endpoint and client-side derivations:
  *
- *  1. KPI ticker row
+ *  1. KPI ticker row          — ForecastStatistics (/api/scenario-data)
+ *  2. Trend + Scenario        — ForecastTrendChart + ScenarioComparison
+ *                               (Burn + Supply / Baseline + Scenario)
+ *  3. Weather Intelligence    — WeatherIntelligence (/api/weather-data)
+ *  4. Stockpile + insights    — StockpileTrajectory + ForecastInsights
+ *  5. Fleet + correlation     — StationFleetOverview + WeatherCorrelation
  *
- *  2. Forecast Trend + Scenario Comparison
- *
- *  3. Weather Intelligence
- *
- *  4. Stockpile trajectory + insights
- *
- *  5. Station fleet + weather correlation
- *
- * LAYOUT NOTE
- * -----------
- * Every row is a plain CSS grid rather than a MUI `<Grid container>`.
- * The MUI grid implements gutters with negative margins plus a
- * `calc(100% + gutter)` width; combined with the `width: 100%`
- * overrides this file used to set, the rows below the KPI ticker
- * ended ~20px short of it. With CSS grid, all rows — including
- * Scenario Comparison — start and finish on exactly the same edges
- * as the Forecast Horizon KPI card above them.
+ * Trend + Scenario sit side-by-side on desktop, stacked on small screens.
  */
-
-const ROW_GAP = 2.5;
-
 const ForecastOverview = () => {
-  const { horizon, metric, entityId, scenario } = useForecastContext();
+  const {
+    horizon,
+    metric,
+    entityId,
+    scenario,
+  } = useForecastContext();
 
   const filters: ForecastFilters = {
     horizon,
@@ -57,99 +47,274 @@ const ForecastOverview = () => {
       sx={{
         width: "100%",
         minWidth: 0,
-        display: "flex",
-        flexDirection: "column",
-        gap: ROW_GAP,
       }}
     >
+
       {/* ==================================================
           1 · KPI TICKER
       ================================================== */}
 
-      <ForecastStatistics />
+      <Box
+        sx={{
+          mb: 3,
+          width: "100%",
+          minWidth: 0,
+        }}
+      >
+        <ForecastStatistics />
+      </Box>
+
 
       {/* ==================================================
           2 · FORECAST TREND + SCENARIO COMPARISON
+      ==================================================
+      
+      ForecastTrendChart:
+        - Burn
+        - Supply
+
+      ScenarioComparison:
+        - Baseline
+        - Selected weather scenario
       ================================================== */}
 
-      <Box
+      <Grid
+        container
+        spacing={2.5}
         sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            lg: "repeat(2, minmax(0, 1fr))",
-          },
-          gap: ROW_GAP,
-          alignItems: "stretch",
+          mb: 2.5,
           width: "100%",
+          alignItems: "stretch",
         }}
       >
-        <Box className="eskom-fade-up" sx={{ minWidth: 0, display: "flex", "& > *": { width: "100%", minWidth: 0 } }}>
-          <ForecastTrendChart filters={filters} />
-        </Box>
 
-        <Box className="eskom-fade-up" sx={{ minWidth: 0, display: "flex", "& > *": { width: "100%", minWidth: 0 } }}>
-          <ScenarioComparison filters={filters} />
-        </Box>
-      </Box>
+        {/* -----------------------------------------------
+            FORECAST TREND
+            Burn + Supply
+        ------------------------------------------------ */}
+
+        <Grid
+          item
+          xs={12}
+          lg={6}
+          sx={{
+            display: "flex",
+            minWidth: 0,
+          }}
+        >
+          <Box
+            className="eskom-fade-up"
+            sx={{
+              width: "100%",
+              minWidth: 0,
+              display: "flex",
+
+              "& > *": {
+                width: "100%",
+                minWidth: 0,
+              },
+            }}
+          >
+            <ForecastTrendChart
+              filters={filters}
+            />
+          </Box>
+        </Grid>
+
+
+        {/* -----------------------------------------------
+            SCENARIO COMPARISON
+            Baseline + Selected Scenario
+        ------------------------------------------------ */}
+
+        <Grid
+          item
+          xs={12}
+          lg={6}
+          sx={{
+            display: "flex",
+            minWidth: 0,
+          }}
+        >
+          <Box
+            className="eskom-fade-up"
+            sx={{
+              width: "100%",
+              minWidth: 0,
+              display: "flex",
+
+              "& > *": {
+                width: "100%",
+                minWidth: 0,
+              },
+            }}
+          >
+            <ScenarioComparison
+              filters={filters}
+            />
+          </Box>
+        </Grid>
+
+      </Grid>
+
 
       {/* ==================================================
           3 · WEATHER INTELLIGENCE
       ================================================== */}
 
-      <Box className="eskom-fade-up" sx={{ width: "100%", minWidth: 0 }}>
-        <WeatherIntelligence entityId={entityId} />
+      <Box
+        sx={{
+          mb: 2.5,
+          width: "100%",
+          minWidth: 0,
+        }}
+      >
+        <Box
+          className="eskom-fade-up"
+          sx={{
+            width: "100%",
+            minWidth: 0,
+          }}
+        >
+          <WeatherIntelligence
+            entityId={entityId}
+          />
+        </Box>
       </Box>
+
 
       {/* ==================================================
           4 · STOCKPILE TRAJECTORY + INSIGHTS
       ================================================== */}
 
-      <Box
+      <Grid
+        container
+        spacing={2.5}
         sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            xl: "7fr 5fr",
-          },
-          gap: ROW_GAP,
-          alignItems: "stretch",
+          mb: 2.5,
           width: "100%",
+          alignItems: "stretch",
         }}
       >
-        <Box className="eskom-fade-up" sx={{ minWidth: 0, display: "flex", "& > *": { width: "100%", minWidth: 0 } }}>
-          <StockpileTrajectory filters={filters} />
-        </Box>
 
-        <Box className="eskom-fade-up" sx={{ minWidth: 0, display: "flex", "& > *": { width: "100%", minWidth: 0 } }}>
-          <ForecastInsights filters={filters} />
-        </Box>
-      </Box>
+        {/* Stockpile */}
+
+        <Grid
+          item
+          xs={12}
+          xl={7}
+          sx={{
+            display: "flex",
+            minWidth: 0,
+          }}
+        >
+          <Box
+            className="eskom-fade-up"
+            sx={{
+              flex: 1,
+              width: "100%",
+              minWidth: 0,
+            }}
+          >
+            <StockpileTrajectory
+              filters={filters}
+            />
+          </Box>
+        </Grid>
+
+
+        {/* Insights */}
+
+        <Grid
+          item
+          xs={12}
+          xl={5}
+          sx={{
+            display: "flex",
+            minWidth: 0,
+          }}
+        >
+          <Box
+            className="eskom-fade-up"
+            sx={{
+              flex: 1,
+              width: "100%",
+              minWidth: 0,
+            }}
+          >
+            <ForecastInsights
+              filters={filters}
+            />
+          </Box>
+        </Grid>
+
+      </Grid>
+
 
       {/* ==================================================
           5 · STATION FLEET + WEATHER CORRELATION
       ================================================== */}
 
-      <Box
+      <Grid
+        container
+        spacing={2.5}
         sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            lg: "4fr 8fr",
-          },
-          gap: ROW_GAP,
-          alignItems: "stretch",
           width: "100%",
+          alignItems: "stretch",
         }}
       >
-        <Box className="eskom-fade-up" sx={{ minWidth: 0, display: "flex", "& > *": { width: "100%", minWidth: 0 } }}>
-          <StationFleetOverview />
-        </Box>
 
-        <Box className="eskom-fade-up" sx={{ minWidth: 0, display: "flex", "& > *": { width: "100%", minWidth: 0 } }}>
-          <WeatherCorrelation filters={filters} />
-        </Box>
-      </Box>
+        {/* Station Fleet */}
+
+        <Grid
+          item
+          xs={12}
+          lg={4}
+          sx={{
+            display: "flex",
+            minWidth: 0,
+          }}
+        >
+          <Box
+            className="eskom-fade-up"
+            sx={{
+              flex: 1,
+              width: "100%",
+              minWidth: 0,
+            }}
+          >
+            <StationFleetOverview />
+          </Box>
+        </Grid>
+
+
+        {/* Weather Correlation */}
+
+        <Grid
+          item
+          xs={12}
+          lg={8}
+          sx={{
+            display: "flex",
+            minWidth: 0,
+          }}
+        >
+          <Box
+            className="eskom-fade-up"
+            sx={{
+              flex: 1,
+              width: "100%",
+              minWidth: 0,
+            }}
+          >
+            <WeatherCorrelation
+              filters={filters}
+            />
+          </Box>
+        </Grid>
+
+      </Grid>
+
     </Box>
   );
 };

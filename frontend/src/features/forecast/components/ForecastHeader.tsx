@@ -1,3 +1,4 @@
+// UNUSED COMPONENT (orphan) — not imported anywhere. [DATA: STATIC-UI] heading text.
 import {
   AutorenewRounded,
   DownloadRounded,
@@ -20,10 +21,10 @@ const ForecastHeader = () => {
       elevation={0}
       sx={{
         p: 4,
-        borderRadius: "12px",
+        borderRadius: 4,
         border: "1px solid",
         borderColor: "divider",
-        bgcolor: "transparent",
+        bgcolor: "#fff",
       }}
     >
       <Stack
@@ -96,7 +97,7 @@ const ForecastHeader = () => {
             variant="outlined"
             startIcon={<DownloadRounded />}
             sx={{
-              borderRadius: "12px",
+              borderRadius: 3,
               height: 46,
               px: 3,
             }}
@@ -108,7 +109,7 @@ const ForecastHeader = () => {
             variant="outlined"
             startIcon={<AutorenewRounded />}
             sx={{
-              borderRadius: "12px",
+              borderRadius: 3,
               height: 46,
               px: 3,
             }}
@@ -120,7 +121,7 @@ const ForecastHeader = () => {
             variant="contained"
             startIcon={<PlayArrowRounded />}
             sx={{
-              borderRadius: "12px",
+              borderRadius: 3,
               height: 46,
               px: 4,
               boxShadow: "none",

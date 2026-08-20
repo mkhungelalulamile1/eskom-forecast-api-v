@@ -1,0 +1,88 @@
+# Fires on release/* pushes only. Blue/green via a plain Service color-
+# selector flip (see docs/ARCHITECTURE.md) -- no manual approval gate here
+# (qa rehearses the exact release mechanics prod uses, on shared nonprod
+# infra, before anything reaches prod).
+trigger:
+  branches:
+    include:
+      - release/*
+
+pr: none
+
+variables:
+  environmentName: qa
+  # Name of the ADO Environment resource (Pipelines -> Environments).
+  adoEnvironmentName: COAL-STOCKPILE-QA
+  namespace: app-coal-stockpile-qa
+  overlayPath: k8s/overlays/qa/backend
+  workloadKey: backend
+  imageRepository: eskom-forecast-api
+  serviceName: eskom-forecast-api
+  acrName: MAZACRSANDTINONPROD
+  # DTI-NONPROD-AZURE-CONNECTION is an Azure Resource Manager service
+  # connection, used for everything: az acr login, and az aks command invoke
+  # (no direct kubectl session). Same shared nonprod cluster dev uses --
+  # dev and qa's pipeline credentials can therefore technically reach each
+  # other's namespace too (cluster-scoped RBAC, not namespace-scoped) -- an
+  # accepted trade-off, see docs/ARCHITECTURE.md.
+  azureServiceConnection: DTI-NONPROD-AZURE-CONNECTION
+  resourceGroup: SAN-DTI-NONPROD-RG
+  aksClusterName: MAZ-AKS-SAN-DTI-NonProd
+
+stages:
+  - template: templates/validate-stage.yml
+    parameters:
+      overlayPath: ${{ variables.overlayPath }}
+
+  - template: templates/build-scan-push.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      acrName: ${{ variables.acrName }}
+      imageRepository: ${{ variables.imageRepository }}
+      dockerfilePath: "."
+      buildContext: "."
+      baseImageRef: "python:3.11-slim"
+      baseImageBuildArgName: PYTHON_BASE_IMAGE
+      mirroredBaseRepo: "base/python:3.11-slim"
+      passCorporateCA: true
+
+  - template: templates/deploy-stage.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      environmentName: ${{ variables.environmentName }}
+      adoEnvironmentName: ${{ variables.adoEnvironmentName }}
+      namespace: ${{ variables.namespace }}
+      overlayPath: ${{ variables.overlayPath }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      resourceGroup: ${{ variables.resourceGroup }}
+      aksClusterName: ${{ variables.aksClusterName }}
+      acrName: ${{ variables.acrName }}
+      imageRepository: ${{ variables.imageRepository }}
+      serviceName: ${{ variables.serviceName }}
+      imageTag: $[ stageDependencies.BuildScanPush_backend.BuildScanPush.outputs['setImageTag.imageTag'] ]
+      colorEnabled: true
+
+  - template: templates/smoke-test-stage.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      environmentName: ${{ variables.environmentName }}
+      namespace: ${{ variables.namespace }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      resourceGroup: ${{ variables.resourceGroup }}
+      aksClusterName: ${{ variables.aksClusterName }}
+      imageRepository: ${{ variables.imageRepository }}
+      serviceName: ${{ variables.serviceName }}
+      colorEnabled: true
+      workloadKind: backend
+
+  - template: templates/cutover-stage.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      environmentName: ${{ variables.environmentName }}
+      adoEnvironmentName: ${{ variables.adoEnvironmentName }}
+      namespace: ${{ variables.namespace }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      resourceGroup: ${{ variables.resourceGroup }}
+      aksClusterName: ${{ variables.aksClusterName }}
+      serviceName: ${{ variables.serviceName }}

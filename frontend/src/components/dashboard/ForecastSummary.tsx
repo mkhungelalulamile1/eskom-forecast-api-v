@@ -1,3 +1,5 @@
+// Used ONLY by the unrouted Dashboard page.
+// [DATA: DYNAMIC] forecast series from /api/scenario-data; view toggles are USER-STATE.
 import { useEffect, useMemo, useState } from "react";
 
 import {

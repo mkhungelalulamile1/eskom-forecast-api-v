@@ -40,15 +40,6 @@ import {
   useForecastChart,
 } from "../hooks/useForecast";
 
-
-import {
-  cardBorderColor,
-  cardFill,
-  hairline,
-  neutralFill,
-  softBorder,
-} from "../../../theme/surfaces";
-
 interface ForecastTrendChartProps {
   filters: ForecastFilters;
 }
@@ -122,9 +113,10 @@ const ForecastTooltip = ({
   return (
     <Box
       sx={{
-        bgcolor: "transparent",
-        border: softBorder,
-        borderRadius: "12px",
+        bgcolor: "#FFFFFF",
+        border:
+          "1px solid #E1E6EF",
+        borderRadius: 2.5,
         px: 2,
         py: 1.5,
         boxShadow:
@@ -224,6 +216,18 @@ const ForecastTooltip = ({
   );
 };
 
+/**
+ * FORECAST TREND CHART — "… Burn Forecast" card with KPI strip
+ * (Average Burn, Peak Burn, Horizon Trend, Periods), the Burn/Supply
+ * chart and the footer stats (Lowest Projected, Avg Supply, Peak).
+ *
+ * [DATA: DYNAMIC] chart series + every KPI number are computed from
+ * useForecastChart() → filtered /api/scenario-data records
+ * (Input = burn, Replenishment = supply). No mock values.
+ *
+ * [DATA: STATIC-UI] card titles, badge labels ("Forecast Generated"),
+ * colors, and the hard "t/day" unit labels in tooltip/footer.
+ */
 const ForecastTrendChart = ({
   filters,
 }: ForecastTrendChartProps) => {
@@ -437,9 +441,10 @@ const ForecastTrendChart = ({
     return (
       <Box
         sx={{
-          bgcolor: "transparent",
-          border: softBorder,
-          borderRadius: "12px",
+          bgcolor: "#FFFFFF",
+          border:
+            "1px solid #E3E8EF",
+          borderRadius: 4,
           p: {
             xs: 2.5,
             md: 3.5,
@@ -458,7 +463,7 @@ const ForecastTrendChart = ({
             sx={{
               width: 44,
               height: 44,
-              borderRadius: "12px",
+              borderRadius: 2.5,
               bgcolor:
                 "rgba(18,100,255,0.08)",
               display: "flex",
@@ -517,9 +522,10 @@ const ForecastTrendChart = ({
     return (
       <Box
         sx={{
-          bgcolor: "transparent",
-          border: softBorder,
-          borderRadius: "12px",
+          bgcolor: "#FFFFFF",
+          border:
+            "1px solid #E3E8EF",
+          borderRadius: 4,
           minHeight: 520,
           display: "flex",
           alignItems: "center",
@@ -582,10 +588,10 @@ const ForecastTrendChart = ({
       sx={{
         width: "100%",
         height: "100%",
-        bgcolor: cardFill,
+        bgcolor: "background.paper",
         border: "1px solid",
-        borderColor: cardBorderColor,
-        borderRadius: "12px",
+        borderColor: "divider",
+        borderRadius: 12,
         overflow: "hidden",
         boxShadow: (t) =>
           t.palette.mode === "dark"
@@ -633,7 +639,7 @@ const ForecastTrendChart = ({
               sx={{
                 width: 46,
                 height: 46,
-                borderRadius: "12px",
+                borderRadius: 2.5,
                 bgcolor:
                   "rgba(18,100,255,0.08)",
                 display: "flex",
@@ -707,7 +713,7 @@ const ForecastTrendChart = ({
                 gap: 0.75,
                 px: 1.25,
                 py: 0.75,
-                borderRadius: "10px",
+                borderRadius: 2,
                 bgcolor:
                   "rgba(18,100,255,0.06)",
                 border:
@@ -741,7 +747,7 @@ const ForecastTrendChart = ({
               sx={{
                 px: 1.25,
                 py: 0.75,
-                borderRadius: "10px",
+                borderRadius: 2,
                 bgcolor:
                   "rgba(46,125,50,0.07)",
                 border:
@@ -790,14 +796,15 @@ const ForecastTrendChart = ({
           },
         }}
       >
-        {/* AVERAGE BURN */}
+        {/* [DATA: DYNAMIC] AVERAGE BURN — mean of the API burn (Input) records */}
 
         <Box
           sx={{
             px: 1.75,
             py: 1.5,
-            borderRadius: "12px",
-            bgcolor: neutralFill,
+            borderRadius: 2.5,
+            bgcolor:
+              "#F7F9FC",
           }}
         >
           <Typography
@@ -840,14 +847,15 @@ const ForecastTrendChart = ({
           </Typography>
         </Box>
 
-        {/* PEAK BURN */}
+        {/* [DATA: DYNAMIC] PEAK BURN — max of the API burn (Input) records */}
 
         <Box
           sx={{
             px: 1.75,
             py: 1.5,
-            borderRadius: "12px",
-            bgcolor: neutralFill,
+            borderRadius: 2.5,
+            bgcolor:
+              "#F7F9FC",
           }}
         >
           <Typography
@@ -896,8 +904,9 @@ const ForecastTrendChart = ({
           sx={{
             px: 1.75,
             py: 1.5,
-            borderRadius: "12px",
-            bgcolor: neutralFill,
+            borderRadius: 2.5,
+            bgcolor:
+              "#F7F9FC",
           }}
         >
           <Typography
@@ -912,6 +921,7 @@ const ForecastTrendChart = ({
                 "0.06em",
             }}
           >
+            {/* [DATA: DYNAMIC] HORIZON TREND — % change first→last burn record */}
             Horizon Trend
           </Typography>
 
@@ -949,14 +959,15 @@ const ForecastTrendChart = ({
           </Typography>
         </Box>
 
-        {/* PERIODS */}
+        {/* [DATA: DYNAMIC] PERIODS — count of API records in the horizon */}
 
         <Box
           sx={{
             px: 1.75,
             py: 1.5,
-            borderRadius: "12px",
-            bgcolor: neutralFill,
+            borderRadius: 2.5,
+            bgcolor:
+              "#F7F9FC",
           }}
         >
           <Typography
@@ -1012,7 +1023,7 @@ const ForecastTrendChart = ({
           px: 2,
         }}
       >
-        {/* BURN */}
+        {/* [DATA: STATIC-UI] chart legend labels ("Burn" / "Replenishment") */}
 
         <Stack
           direction="row"
@@ -1174,7 +1185,7 @@ const ForecastTrendChart = ({
               }}
               axisLine={false}
               tickLine={false}
-              width={72}
+              width={58}
               tickFormatter={(
                 value: number
               ) =>
@@ -1196,7 +1207,7 @@ const ForecastTrendChart = ({
               }}
             />
 
-            {/* AVERAGE BURN */}
+            {/* [DATA: DYNAMIC] AVERAGE BURN — mean of the API burn (Input) records */}
 
             <ReferenceLine
               y={averageBurn}
@@ -1285,7 +1296,8 @@ const ForecastTrendChart = ({
             xs: 2.5,
             md: 4,
           },
-          borderTop: hairline,
+          borderTop:
+            "1px solid #E3E8EF",
           py: 2.5,
           display: "flex",
           justifyContent:
@@ -1316,6 +1328,7 @@ const ForecastTrendChart = ({
                 "0.04em",
             }}
           >
+            {/* [DATA: DYNAMIC] Lowest Projected — min burn from API records */}
             Lowest Projected
           </Typography>
 
@@ -1357,6 +1370,7 @@ const ForecastTrendChart = ({
                 "0.04em",
             }}
           >
+            {/* [DATA: DYNAMIC] Avg Supply — mean Replenishment from API records */}
             Avg Supply
           </Typography>
 

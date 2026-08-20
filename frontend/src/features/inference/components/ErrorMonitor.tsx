@@ -1,3 +1,5 @@
+// ⚠️ /inference page is routed but HIDDEN from the sidebar navigation.
+// [DATA: MOCK] the `errors` array below is a hardcoded demo list.
 import {
   CheckCircleRounded,
   ErrorRounded,
@@ -116,7 +118,7 @@ border:"1px solid",
 
 borderColor:"divider",
 
-borderRadius: "12px",
+borderRadius:3,
 
 }}
 

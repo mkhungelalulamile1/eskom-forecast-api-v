@@ -1,13 +1,16 @@
-import { Box } from "@mui/material";
+import { Box, Grid, Typography } from "@mui/material";
 
 import {
   TimelineRounded,
   TrendingUpRounded,
   CalendarMonthRounded,
-  Inventory2Rounded,
+  WaterRounded,
 } from "@mui/icons-material";
 
-import KpiStatCard from "../../../components/common/KpiStatCard";
+import { alpha } from "@mui/material/styles";
+
+import AnimatedNumber from "../../../components/common/AnimatedNumber";
+import MetricSparkline from "../../../components/common/MetricSparkline";
 
 import {
   ForecastFilters,
@@ -22,15 +25,20 @@ import {
 import { useForecastContext } from "../../../contexts/ForecastContext";
 
 /**
- * =====================================================
- * FORECAST STATISTICS
- * =====================================================
- * The KPI row at the top of the Forecast page.
+ * FORECAST STATISTICS — the 4 KPI cards on top of the Forecast page:
+ * Average Forecast, Peak Forecast, Projected Volume, Forecast Horizon.
  *
- * It renders the shared `KpiStatCard` — the same component the
- * Model Performance KPIs use — so both pages have identical card
- * geometry: same padding, same 46px tinted icon tile in the top
- * right, same value baseline and the same sparkline slot.
+ * [DATA: DYNAMIC] All four values come from useForecastStatistics() →
+ * forecastService.getStatistics() → client-side math over filtered
+ * /api/scenario-data records (no dedicated stats endpoint, no mock data).
+ * The sparkline is the same records' series for the selected metric.
+ *
+ * Caveat: with the mock default station "entity_1" (see ForecastContext)
+ * or any filter that matches nothing, the service returns zeros and the
+ * cards show 0 — that is "dynamic but empty", not mock.
+ *
+ * [DATA: STATIC-UI] card titles, subtitles, icons and colors are fixed
+ * UI constants; units (t/day vs tonnes) switch on the horizon selection.
  */
 const ForecastStatistics = () => {
   const { horizon, metric, entityId, scenario } = useForecastContext();
@@ -40,6 +48,7 @@ const ForecastStatistics = () => {
   const { data, isError } = useForecastStatistics(filters);
   const { data: chartData } = useForecastChart(filters);
 
+  // [DATA: DYNAMIC] sparkline series from /api/scenario-data records
   const records: ForecastRecord[] = chartData ?? [];
   const spark = records
     .map((r) =>
@@ -51,18 +60,15 @@ const ForecastStatistics = () => {
     )
     .filter((v) => Number.isFinite(v));
 
-  const metricLabel =
-    metric === "burn"
-      ? "coal burn"
-      : metric === "supply"
-        ? "coal supply"
-        : "stockpile";
+  const fmt = (v: number): string =>
+    new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(v).replace(/,/g, " ");
 
-  const metricUnit =
-    metric === "stockpile" ? "tonnes" : horizon === "daily" ? "t/day" : "tonnes";
-
+  const metricLabel = metric === "burn" ? "coal burn" : metric === "supply" ? "coal supply" : "stockpile";
+  const metricUnit = metric === "stockpile" ? "tonnes" : horizon === "daily" ? "t/day" : "tonnes";
   const horizonUnit = horizon === "daily" ? "Days" : "Months";
 
+  // [DATA: DYNAMIC] value fields (average/peak/projectedVolume/horizon) are
+  // computed from the API records; labels/units below are STATIC-UI.
   const cards = [
     {
       title: "Average Forecast",
@@ -86,7 +92,7 @@ const ForecastStatistics = () => {
       unit: "tonnes",
       subtitle: "Forecast horizon total",
       color: "#1E9E6A",
-      icon: <Inventory2Rounded />,
+      icon: <WaterRounded />,
     },
     {
       title: "Forecast Horizon",
@@ -98,51 +104,136 @@ const ForecastStatistics = () => {
     },
   ];
 
-  /*
-   * A CSS grid (not MUI <Grid container>) is used on purpose: the
-   * MUI grid relies on negative margins, which made this row hang
-   * ~20px past the rows underneath it. With CSS grid every row on
-   * the page starts and ends on exactly the same edges.
-   */
   return (
-    <Box
-      className="eskom-stagger"
-      sx={{
-        display: "grid",
-        gridTemplateColumns: {
-          xs: "1fr",
-          sm: "repeat(2, minmax(0, 1fr))",
-          lg: "repeat(4, minmax(0, 1fr))",
-        },
-        gap: 2.5,
-        width: "100%",
-      }}
-    >
+    <Grid container spacing={2.5} className="eskom-stagger">
       {cards.map((card) => (
-        <KpiStatCard
-          key={card.title}
-          title={card.title}
-          value={card.value}
-          unit={card.unit}
-          subtitle={card.subtitle}
-          color={card.color}
-          icon={card.icon}
-          spark={spark}
-        />
+        <Grid item xs={12} sm={6} lg={3} key={card.title}>
+          <StatCard
+            title={card.title}
+            value={card.value}
+            unit={card.unit}
+            subtitle={card.subtitle}
+            color={card.color}
+            icon={card.icon}
+            spark={spark}
+            format={fmt}
+          />
+        </Grid>
       ))}
 
       {isError && (
-        <Box sx={{ gridColumn: "1 / -1" }}>
-          <KpiStatCard
+        <Grid item xs={12}>
+          <StatCard
             title="Forecast Statistics"
-            text="—"
+            value={null}
+            unit=""
             subtitle="Unable to load forecast data"
             color="#D64545"
             icon={<TimelineRounded />}
+            spark={[]}
+            format={fmt}
           />
-        </Box>
+        </Grid>
       )}
-    </Box>
+    </Grid>
+  );
+};
+
+/**
+ * Redesigned KPI stat card with animated number + sparkline.
+ */
+interface StatCardProps {
+  title: string;
+  value: number | null;
+  unit: string;
+  subtitle: string;
+  color: string;
+  icon: React.ReactNode;
+  spark: number[];
+  format: (v: number) => string;
+}
+
+const StatCard = ({ title, value, unit, subtitle, color, icon, spark, format }: StatCardProps) => {
+  return (
+    <Grid
+      container
+      sx={{
+        bgcolor: "background.paper",
+        border: "1px solid #E4EAF3",
+        borderRadius: 12,
+        p: 2.25,
+        position: "relative",
+        overflow: "hidden",
+        boxShadow: "0 10px 30px rgba(16,32,62,0.05)",
+        transition: "transform .22s ease, box-shadow .22s ease",
+        "&:hover": {
+          transform: "translateY(-4px)",
+          boxShadow: "0 18px 44px rgba(16,32,62,0.10)",
+        },
+      }}
+    >
+      {/* accent glow */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: -30,
+          right: -30,
+          width: 110,
+          height: 110,
+          borderRadius: "50%",
+          bgcolor: alpha(color, 0.08),
+        }}
+      />
+
+      <Grid item xs={12} sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <Box>
+          <Typography
+            sx={{ fontSize: 11, fontWeight: 800, color: "text.secondary", letterSpacing: 1.2, textTransform: "uppercase" }}
+          >
+            {title}
+          </Typography>
+          <Typography sx={{ mt: 0.5, color: "text.secondary", fontSize: 12 }}>
+            {subtitle}
+          </Typography>
+        </Box>
+
+        <Box
+          sx={{
+            width: 46,
+            height: 46,
+            borderRadius: 14,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            bgcolor: alpha(color, 0.1),
+            color,
+            flexShrink: 0,
+          }}
+        >
+          {icon}
+        </Box>
+      </Grid>
+
+      <Grid item xs={12} sx={{ mt: 2.5 }}>
+        <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75 }}>
+          {value !== null && (
+            <AnimatedNumber
+              value={value}
+              decimals={Math.abs(value) >= 100 ? 0 : 2}
+            />
+          )}
+          {value === null && (
+            <Typography sx={{ fontSize: 26, fontWeight: 800, lineHeight: 1, color: "text.primary" }}>—</Typography>
+          )}
+          {unit && (
+            <Typography sx={{ color: "text.secondary", fontWeight: 600, fontSize: 13 }}>{unit}</Typography>
+          )}
+        </Box>
+        <Box sx={{ mt: 1.5 }}>
+          <MetricSparkline data={spark} color={color} width={120} height={36} />
+        </Box>
+      </Grid>
+    </Grid>
   );
 };
 

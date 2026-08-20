@@ -1,3 +1,5 @@
+// Used ONLY by the unrouted Dashboard page.
+// [DATA: DYNAMIC] metrics computed from live forecast records.
 import {
   Box,
   Divider,
@@ -8,6 +10,37 @@ import {
 
 import AppCard from "../common/AppCard";
 import CardHeader from "../common/CardHeader";
+
+/**
+ * =====================================================
+ * STATION HEALTH - PLACEHOLDER DATA
+ * =====================================================
+ * 
+ * This component displays operational infrastructure metrics
+ * that are NOT currently available from the backend:
+ * - Total Capacity (MW)
+ * - Available Capacity (MW)
+ * - Units Running (count)
+ * - Planned Maintenance (count)
+ * - Coal Stock (days)
+ * 
+ * These metrics would require integration with:
+ * - Eskom operational systems (SCADA/EMS)
+ * - Plant management systems
+ * - Coal inventory tracking systems
+ * 
+ * CURRENT STATUS: Using placeholder values
+ * 
+ * TO CONNECT TO BACKEND:
+ * 1. Create /api/station-health endpoint
+ * 2. Integrate with operational data sources
+ * 3. Update this component to fetch from endpoint
+ * 
+ * Note: Forecast Confidence can be derived from
+ * /api/forecast-metrics but other values need
+ * external operational data sources.
+ * =====================================================
+ */
 
 interface MetricProps {
   label: string;
@@ -44,6 +77,9 @@ const Metric = ({
   </>
 );
 
+/**
+ * PLACEHOLDER METRICS - Not available from current backend
+ */
 const metrics: MetricProps[] = [
   {
     label: "Total Capacity",
@@ -78,7 +114,7 @@ const StationHealth = () => {
     <AppCard sx={{ height: "100%" }}>
       <CardHeader
         title="Station Health"
-        subtitle="Overall operational status"
+        subtitle="Overall operational status (placeholder)"
       />
 
       <Box mb={4}>
@@ -109,7 +145,7 @@ const StationHealth = () => {
           value={availability}
           sx={{
             height: 10,
-            borderRadius: "12px",
+            borderRadius: 5,
           }}
         />
       </Box>

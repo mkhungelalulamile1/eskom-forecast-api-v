@@ -1,3 +1,7 @@
+// DashboardPage is NOT routed (no entry in routes/navigation) — dead screen.
+// [DATA: DYNAMIC] its panels fetch /api/scenario-data + /api/weather-data +
+// /api/inference-monitoring/summary via their own hooks (ForecastSummary,
+// ForecastTrend, RecentForecasts, WeatherSummary, StationStatus, DashboardKPIs).
 import Grid from "@mui/material/Grid";
 
 import DashboardKPIs from "./DashboardKPIs";

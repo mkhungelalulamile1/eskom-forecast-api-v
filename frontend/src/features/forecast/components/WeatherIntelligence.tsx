@@ -12,8 +12,6 @@ import {
 } from "@mui/material";
 
 import {
-  GrainRounded,
-  WbTwilightRounded,
   AirRounded,
   CloudRounded,
   OpacityRounded,
@@ -39,19 +37,6 @@ import {
 import { useForecastEntities } from "../hooks/useForecast";
 
 
-
-import {
-  SurfaceValue,
-  cardBorderColor,
-  cardFill,
-  infoTint,
-  neutralFill,
-  softBorder,
-  softText,
-  successTint,
-  warningTint,
-} from "../../../theme/surfaces";
-
 interface WeatherIntelligenceProps {
   entityId?: string;
 }
@@ -70,6 +55,24 @@ interface WeatherEntity {
 }
 
 
+/**
+ * WEATHER INTELLIGENCE — current-conditions tile strip + 7/30-day outlook
+ * and signal aggregates for the selected station.
+ *
+ * [DATA: DYNAMIC] all values come from useWeatherSummary /
+ * useWeatherOutlook / useWeatherSignals → weather.service →
+ * GET /api/weather-data?entity_id=… (Open-Meteo cache on the backend).
+ * No mock weather numbers in this component.
+ *
+ * [DATA: DYNAMIC — ENDPOINT MISSING] the station tab strip is fed by
+ * useForecastEntities() → GET /api/entities, which the backend does not
+ * expose yet → no tabs render and the "ensure entity exists" effect
+ * never corrects the mock default "entity_1" (weather then loads for a
+ * station id the backend doesn't know — backend falls back to its
+ * default station, Kendal).
+ *
+ * [DATA: USER-STATE] current / 7-day / 30-day view switch.
+ */
 const WeatherIntelligence = ({
   entityId: propEntityId,
 }: WeatherIntelligenceProps) => {
@@ -386,9 +389,12 @@ const WeatherIntelligence = ({
       sx={{
         width: "100%",
         height: "100%",
-        bgcolor: cardFill,
-        border: "1px solid",
-        borderColor: cardBorderColor,
+        bgcolor:
+          "background.paper",
+        border:
+          "1px solid",
+        borderColor:
+          "divider",
         borderRadius:
           "12px !important",
         p: {
@@ -454,8 +460,9 @@ const WeatherIntelligence = ({
               sx={{
                 width: 48,
                 height: 48,
-                borderRadius: "10px",
-                bgcolor: infoTint,
+                borderRadius: 2,
+                bgcolor:
+                  "#EEF4FF",
                 color:
                   "#1264FF",
                 display: "flex",
@@ -632,7 +639,9 @@ const WeatherIntelligence = ({
       />
 
 
-      {/* CURRENT VIEW */}
+      {/* [DATA: DYNAMIC] CURRENT VIEW — condition, temp max/min, rainfall,
+          cloud, humidity, wind, UV, sunshine + date all from
+          GET /api/weather-data (latest record for the station). */}
 
       {view === "current" && (
         <CurrentWeather
@@ -659,7 +668,8 @@ const WeatherIntelligence = ({
       )}
 
 
-      {/* OUTLOOK VIEW */}
+      {/* [DATA: DYNAMIC] OUTLOOK VIEW — per-day cards (condition, temps,
+          rainfall, wind) from the same API's forward records. */}
 
       {view !== "current" && (
         <>
@@ -836,9 +846,8 @@ const CurrentWeather = ({
       value: `${formatNumber(
         current.rainfall
       )} mm`,
-      /* rain drops — distinct from the humidity water drop */
       icon:
-        <GrainRounded />,
+        <OpacityRounded />,
     },
     {
       label: "Cloud Cover",
@@ -880,9 +889,8 @@ const CurrentWeather = ({
       value: `${formatNumber(
         current.sunshine
       )} hrs`,
-      /* sunshine hours — distinct from the UV index sun */
       icon:
-        <WbTwilightRounded />,
+        <WbSunnyRounded />,
     },
   ];
 
@@ -934,8 +942,9 @@ const CurrentWeather = ({
             sx={{
               px: 2,
               py: 1.25,
-              bgcolor: infoTint,
-              borderRadius: "12px",
+              bgcolor:
+                "#EEF4FF",
+              borderRadius: 2.5,
               color:
                 "text.primary",
               fontWeight: 800,
@@ -953,9 +962,11 @@ const CurrentWeather = ({
             sx={{
               px: 2,
               py: 1.25,
-              bgcolor: neutralFill,
-              borderRadius: "12px",
-              color: softText,
+              bgcolor:
+                "#F5F6F8",
+              borderRadius: 2.5,
+              color:
+                "#68758A",
               fontWeight: 700,
             }}
           >
@@ -1120,9 +1131,11 @@ const WeatherOutlookGrid = ({
               }
               sx={{
                 p: 2,
-                borderRadius: "12px",
-                bgcolor: neutralFill,
-                border: softBorder,
+                borderRadius: 3,
+                bgcolor:
+                  "#F7F9FC",
+                border:
+                  "1px solid #E4E9F0",
                 minWidth: 0,
               }}
             >
@@ -1175,7 +1188,7 @@ const WeatherOutlookGrid = ({
               <Typography
                 variant="body2"
                 fontWeight={700}
-                color="text.secondary"
+                color="#68758A"
                 noWrap
                 title={
                   record.condition
@@ -1198,9 +1211,8 @@ const WeatherOutlookGrid = ({
                 <Box
                   component="span"
                   sx={{
-                    /* readable in both themes (the old #8995A7 only
-                       reached 2.9:1 on the light surface) */
-                    color: softText,
+                    color:
+                      "#8995A7",
                     fontWeight: 600,
                     fontSize:
                       "0.85rem",
@@ -1237,7 +1249,7 @@ const WeatherOutlookGrid = ({
 
                 <Typography
                   variant="caption"
-                  color="text.secondary"
+                  color="#68758A"
                   fontWeight={700}
                 >
                   💨{" "}
@@ -1308,13 +1320,7 @@ const WeatherSignals = ({
   }
 
 
-  const items: {
-    label: string;
-    value: string;
-    icon: React.ReactNode;
-    color: string;
-    bg: SurfaceValue;
-  }[] = [
+  const items = [
     {
       label:
         "Average temperature",
@@ -1325,7 +1331,8 @@ const WeatherSignals = ({
         <ThermostatRounded />,
       color:
         "#F59E0B",
-      bg: warningTint,
+      bg:
+        "#FFF8ED",
     },
     {
       label:
@@ -1334,10 +1341,11 @@ const WeatherSignals = ({
         signals.totalRainfall
       )} mm`,
       icon:
-        <GrainRounded />,
+        <OpacityRounded />,
       color:
         "#1683D8",
-      bg: infoTint,
+      bg:
+        "#F0F7FF",
     },
     {
       label:
@@ -1349,7 +1357,8 @@ const WeatherSignals = ({
         <AirRounded />,
       color:
         "#008C7A",
-      bg: successTint,
+      bg:
+        "#F0FAF8",
     },
     {
       label:
@@ -1362,7 +1371,8 @@ const WeatherSignals = ({
         <WbSunnyRounded />,
       color:
         "#F59E0B",
-      bg: warningTint,
+      bg:
+        "#FFF8ED",
     },
   ];
 
@@ -1412,10 +1422,9 @@ const WeatherSignals = ({
               }
               sx={{
                 p: 2.5,
-                borderRadius: "12px",
+                borderRadius: 3,
                 bgcolor:
                   item.bg,
-                border: softBorder,
                 minWidth: 0,
               }}
             >
@@ -1430,11 +1439,9 @@ const WeatherSignals = ({
                   sx={{
                     width: 42,
                     height: 42,
-                    borderRadius: "10px",
-                    bgcolor: (t) =>
-                      t.palette.mode === "dark"
-                        ? "rgba(255,255,255,0.10)"
-                        : "rgba(255,255,255,0.8)",
+                    borderRadius: 2,
+                    bgcolor:
+                      "rgba(255,255,255,0.8)",
                     color:
                       item.color,
                     display:
@@ -1453,7 +1460,7 @@ const WeatherSignals = ({
                 <Typography
                   variant="body2"
                   fontWeight={700}
-                  color="text.secondary"
+                  color="#68758A"
                 >
                   {
                     item.label
@@ -1545,9 +1552,11 @@ const MiniSignal = ({
     <Box
       sx={{
         p: 2,
-        bgcolor: neutralFill,
-        border: softBorder,
-        borderRadius: "12px",
+        bgcolor:
+          "#F7F9FC",
+        border:
+          "1px solid #E4E9F0",
+        borderRadius: 3,
       }}
     >
 
@@ -1591,9 +1600,11 @@ const WeatherMetric = ({
     <Box
       sx={{
         p: 2,
-        borderRadius: "10px",
-        bgcolor: neutralFill,
-        border: softBorder,
+        borderRadius: 2,
+        bgcolor:
+          "#F7F9FC",
+        border:
+          "1px solid #E4E9F0",
         minWidth: 0,
         overflow: "hidden",
       }}
@@ -1612,8 +1623,9 @@ const WeatherMetric = ({
           sx={{
             width: 38,
             height: 38,
-            borderRadius: "10px",
-            bgcolor: "transparent",
+            borderRadius: 1.5,
+            bgcolor:
+              "#FFFFFF",
             color:
               "#1264FF",
             display:
@@ -1632,7 +1644,7 @@ const WeatherMetric = ({
         <Typography
           variant="body2"
           fontWeight={700}
-          color="text.secondary"
+          color="#68758A"
           noWrap
           sx={{
             flex: 1,

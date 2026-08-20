@@ -1,3 +1,4 @@
+// [DATA: STATIC-UI] controlled text input — no data source.
 import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
 import {
   InputAdornment,
@@ -32,7 +33,7 @@ const UsernameField = ({
         ),
         sx: {
           height: 58,
-          borderRadius: "12px",
+          borderRadius: 3,
           bgcolor: "#FAFBFC",
 
           "& fieldset": {

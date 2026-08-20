@@ -1,3 +1,4 @@
+// UNUSED. [DATA: none] presentational empty-state block.
 import { Box, Typography } from "@mui/material";
 import InboxRoundedIcon from "@mui/icons-material/InboxRounded";
 

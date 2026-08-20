@@ -1,3 +1,4 @@
+// [DATA: STATIC-UI] presentational header — title/subtitle passed by caller.
 import React from "react";
 import { Box, Stack, Typography } from "@mui/material";
 
