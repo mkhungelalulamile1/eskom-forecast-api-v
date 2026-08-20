@@ -1,0 +1,6 @@
+# Each entry here must be justified inline, not blanket-suppressed -- see
+# pipelines/templates/validate-stage.yml for how this is used (trivy config
+# against the rendered kustomize output, not the raw source tree).
+#
+# Empty for now: no accepted findings yet. Add entries here only for
+# confirmed false positives or deliberately-accepted risk.

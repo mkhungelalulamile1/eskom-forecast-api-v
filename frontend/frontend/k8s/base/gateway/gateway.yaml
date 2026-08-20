@@ -1,0 +1,97 @@
+# HTTPRoute attaching to a Gateway this app does NOT own, fronting both the
+# frontend and backend Services. No Gateway object of our own here anymore
+# -- see the postmortem below.
+#
+# What changed and why: this repo originally created its own `Gateway`
+# object per environment (matching a pattern documented for a different app
+# on this platform: "each app team owns its own Gateway"). That pattern
+# does not actually work on THIS cluster -- confirmed live: NGF here runs
+# in `static-mode` (`kubectl get deploy ngf-nginx-gateway-fabric -n
+# nginx-gateway -o jsonpath='{.spec.template.spec.containers[*].args}'`
+# shows `static-mode --gatewayclass=nginx`), which binds to exactly ONE
+# Gateway resource per GatewayClass, cluster-wide -- not one per namespace,
+# not one per app. The shared `gateway` (namespace `nginx-gateway`, managed
+# in the cluster-gateway repo) holds that slot; our own `stockpile-gateway`
+# Gateway object was created, applied, and permanently stuck with status
+# `GatewayConflict` / `Programmed: False` the moment it existed, regardless
+# of anything in its spec. The only way anything gets traffic through this
+# shared NGF instance is by attaching to `gateway` itself via a listener its
+# owner adds for our hostname -- exactly how `kibana`'s HTTPRoute (namespace
+# `logging`) already does it (confirmed live via `kubectl get gateway gateway
+# -n nginx-gateway -o yaml`: dedicated `kibana-http`/`kibana-https` listeners,
+# `allowedRoutes.namespaces.from: All`).
+#
+# Prereqs (someone else's resource, not applied by this repo):
+#   - lineai-gateway's owner adds two listeners for this environment's
+#     hostname (http + https, allowedRoutes.namespaces.from: All) -- see
+#     docs/RUNBOOK.md for the exact patch to hand them.
+#   - The ReferenceGrant below (which we DO own and apply) permits
+#     lineai-gateway's https listener to reference our TLS Secret across
+#     namespaces -- Gateway API requires this any time a Gateway's
+#     certificateRefs points outside its own namespace, same as
+#     kibana-tls-secret needed for the logging namespace.
+#
+# Incident postmortem (2026-07-26): a parentRef with no `sectionName`
+# attaches to EVERY listener on the Gateway whose allowedRoutes permits our
+# namespace -- not just the one meant for us. Because kibana-http/-https
+# also have allowedRoutes.namespaces.from: All, this route silently attached
+# there too, inherited that listener's hard-filtered hostname
+# (kibana-dev.digi-incubator.co.za), and won the routing tie-break against
+# kibana's own route -- breaking Kibana, a completely different app on this
+# shared Gateway. Fixed by the lineai-gateway team as a live cluster patch,
+# then made durable here: every parentRef below MUST carry the `sectionName`
+# of the one listener it's meant for (never omit it, even though the
+# Gateway API allows that), and `hostnames` is set as defense-in-depth --
+# even without sectionName, a declared hostname that doesn't intersect a
+# listener's hostname stops the route matching there. Both entries below are
+# templates; each overlay's patch replaces this whole list (kustomize JSON
+# merge patch replaces array fields wholesale, not per-element), but the
+# shape here is the contract every overlay must follow.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: coalstockpile-routes
+spec:
+  parentRefs:
+    - name: PLACEHOLDER_GATEWAY_NAME
+      namespace: PLACEHOLDER_GATEWAY_NAMESPACE
+      sectionName: PLACEHOLDER_GATEWAY_SECTION_HTTP
+    - name: PLACEHOLDER_GATEWAY_NAME
+      namespace: PLACEHOLDER_GATEWAY_NAMESPACE
+      sectionName: PLACEHOLDER_GATEWAY_SECTION_HTTPS
+  hostnames:
+    - PLACEHOLDER_HOSTNAME
+  rules:
+    # Paths owned by the FastAPI backend (see main.py). Gateway API matches
+    # longest-prefix-first, so these win over "/":
+    #   /api                 -- all dashboard data endpoints (/api/forecast-data, ...)
+    #   /healthz              -- backend health probe
+    #   /docs, /openapi.json -- FastAPI interactive docs / OpenAPI schema
+    - matches:
+        - path: { type: PathPrefix, value: /api }
+        - path: { type: PathPrefix, value: /healthz }
+        - path: { type: PathPrefix, value: /docs }
+        - path: { type: PathPrefix, value: /openapi.json }
+      backendRefs:
+        - name: eskom-forecast-api
+          port: 80
+    # Everything else is the static dashboard served by the nginx frontend.
+    - matches:
+        - path: { type: PathPrefix, value: / }
+      backendRefs:
+        - name: coalstockpilefrontend
+          port: 80
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-gateway-tls-secret
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      namespace: PLACEHOLDER_GATEWAY_NAMESPACE
+  to:
+    - group: ""
+      kind: Secret
+      name: PLACEHOLDER_TLS_SECRET_NAME

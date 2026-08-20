@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: app-coal-stockpile
+labels:
+  - pairs:
+      env: dev
+    includeSelectors: true
+resources:
+  - ../../../base/backend/single
+  - namespace.yaml
+  - configmap.yaml
+patches:
+  - path: patch-serviceaccount.yaml
+  - path: patch-secretproviderclass.yaml
+# Deploy pipeline overrides this with the git-sha-tagged image it just built:
+# `kustomize edit set image PLACEHOLDER_ACR_NAME.azurecr.io/eskom-forecast-api=<acr>.azurecr.io/eskom-forecast-api:<tag>`
+images:
+  - name: PLACEHOLDER_ACR_NAME.azurecr.io/eskom-forecast-api
+    newName: mazacrsandtinonprod.azurecr.io/eskom-forecast-api
+    newTag: v1

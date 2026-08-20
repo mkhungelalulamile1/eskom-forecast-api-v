@@ -1,0 +1,106 @@
+# Per-color backend Deployment template, instantiated twice per environment
+# (see overlays/{qa,prod}/backend/{blue,green}) via kustomize nameSuffix +
+# a `color` label (includeSelectors: true propagates it into
+# matchLabels/pod-template-labels too). References eskom-forecast-sa
+# (ServiceAccount) and coalstockpile-kv-secrets (SecretProviderClass) by
+# name -- both are env-level, shared, created once by base/backend/shared,
+# not duplicated per color.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eskom-forecast-api
+  labels:
+    app: eskom-forecast-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eskom-forecast-api
+  template:
+    metadata:
+      labels:
+        app: eskom-forecast-api
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: eskom-forecast-sa
+      automountServiceAccountToken: false
+      # Matches the Dockerfile's `USER appuser` (uid/gid 10001) -- both layers
+      # matter (see the comment there); this is what Trivy's KSV-0118 checks
+      # for (a container able to run as root because nothing said otherwise).
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: incubator
+          # Owned independently per color -- deploy-stage.yml runs
+          # `kustomize edit set image` in only the inactive color's
+          # directory, so a release only ever bumps one color's tag at a time.
+          image: PLACEHOLDER_ACR_NAME.azurecr.io/eskom-forecast-api:PLACEHOLDER_TAG
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              # 512Mi OOMKilled the pod (confirmed live, exit 137,
+              # lastState.terminated.reason: OOMKilled) running
+              # _scheduled_ingest_and_forecast() -- the exact function this
+              # app's own cron job runs in-process, in this same pod, daily
+              # at 02:00 UTC. Bronze data + a full historical weather cache
+              # for all 18 stations + XGBoost training/inference for both
+              # horizons, all in one process alongside the live web server,
+              # needs real headroom.
+              memory: 1Gi
+          envFrom:
+            - configMapRef:
+                name: coalstockpile-config
+            - secretRef:
+                name: coalstockpile-secrets
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          volumeMounts:
+            - name: secrets-store
+              mountPath: /mnt/secrets-store
+              readOnly: true
+            # readOnlyRootFilesystem needs these three writable -- see the
+            # same comment in base/backend/single/deployment.yaml.
+            - name: tmp
+              mountPath: /tmp
+            - name: app-data
+              mountPath: /app/data
+            - name: app-models
+              mountPath: /app/models
+      volumes:
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: coalstockpile-kv-secrets
+        - name: tmp
+          emptyDir: {}
+        - name: app-data
+          emptyDir: {}
+        - name: app-models
+          emptyDir: {}

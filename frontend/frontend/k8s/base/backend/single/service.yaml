@@ -1,0 +1,16 @@
+# ClusterIP -- the Gateway (k8s/base/gateway) is the single entry point into
+# this app; reached by the Gateway's data plane and by the frontend's
+# in-cluster reverse proxy, neither of which needs an Azure LoadBalancer to
+# get there. See docs/RUNBOOK.md.
+apiVersion: v1
+kind: Service
+metadata:
+  name: eskom-forecast-api
+spec:
+  selector:
+    app: eskom-forecast-api
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000

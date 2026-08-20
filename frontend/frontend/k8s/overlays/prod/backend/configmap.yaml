@@ -1,0 +1,24 @@
+# prod's non-secret backend config -- entirely placeholder until prod's own
+# SQL Server/Storage account exist (see docs/RUNBOOK.md open items).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coalstockpile-config
+data:
+  # APP_MODE (src/config.py) defaults to "development" when unset, which
+  # forces Config.use_local_storage=True regardless of Azure Storage being
+  # configured below -- must be explicitly non-"development".
+  APP_MODE: "production"
+  BRONZE_CONTAINER_NAME: "bronze"
+  GOLD_CONTAINER_NAME: "gold"
+  METRICS_CONTAINER_NAME: "metrics"
+  WEATHER_CONTAINER_NAME: "weather"
+  # If prod's SQL Server also runs in-cluster (dev/qa's does -- see
+  # docs/ARCHITECTURE.md "Database"), this will likely follow the same
+  # mssql.<namespace>.svc.cluster.local pattern once that namespace exists on
+  # prod's own cluster. Confirm rather than assume once prod infra exists.
+  SQL_SERVER_HOSTNAME: "PLACEHOLDER_SQL_SERVER_HOSTNAME_PROD"
+  SQL_DATABASE_NAME: "PLACEHOLDER_SQL_DATABASE_NAME_PROD"
+  NUM_ENTITIES: "15"
+  NUM_YEARS: "20"
+  AZURE_STORAGE_ACCOUNT_URL: "PLACEHOLDER_STORAGE_ACCOUNT_URL_PROD"

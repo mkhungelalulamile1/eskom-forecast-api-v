@@ -1,0 +1,25 @@
+# Default-deny, then explicitly allow port 8000 from: (a) same-namespace pods
+# (the frontend's /api reverse-proxy path) and (b) the NGF gateway data-plane
+# namespace (the Gateway's direct-to-backend routes for /api, /healthz,
+# /docs, /openapi.json -- see k8s/base/gateway). No policyTypes: Egress here
+# -- the backend needs open egress to Azure Storage/SQL/Open-Meteo, and
+# restricting that is a separate effort, not in scope for this pass.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: eskom-forecast-api-allow-8000
+spec:
+  podSelector:
+    matchLabels:
+      app: eskom-forecast-api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: nginx-gateway
+      ports:
+        - protocol: TCP
+          port: 8000

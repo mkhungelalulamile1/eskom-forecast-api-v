@@ -1,0 +1,34 @@
+services:
+  api:
+    build:
+      context: .
+      args:
+        # Trusts certs/zscaler-root-ca.crt so outbound HTTPS (apt packages,
+        # Open-Meteo, Azure AD token requests) works from behind this
+        # network's TLS-inspecting corporate proxy. Only needed on networks
+        # like this one -- a CI/CD build elsewhere should omit it.
+        TRUST_CORPORATE_CA: "true"
+    ports:
+      - "8000:8000"
+    env_file:
+      # Service principal credentials (AZURE_CLIENT_ID/AZURE_TENANT_ID/
+      # AZURE_CLIENT_SECRET) -- see .env.example. DefaultAzureCredential
+      # picks these up via EnvironmentCredential, with no `az login`/CLI
+      # needed inside the container (a Windows-encrypted az CLI session
+      # can't be read from a Linux container anyway -- see README).
+      - .env
+    environment:
+      # Points ingest.py/config.py at the real Azure SQL/Storage resources
+      # instead of the local-disk fallback (data/, models/, etc.).
+      AZURE_STORAGE_ACCOUNT_URL: "https://stfuncstockpile2testx7.blob.core.windows.net"
+      SQL_SERVER_HOSTNAME: "sql-stockpile-dev.database.windows.net"
+      SQL_DATABASE_NAME: "COAL_STOCKPILE_MODEL"
+      NUM_ENTITIES: "15"
+      NUM_YEARS: "20"
+    volumes:
+      # Persist local fallback data/models/metrics across restarts instead of
+      # regenerating mock data every time the container starts fresh.
+      # Config's local dirs (LOCAL_BRONZE_DIR etc.) default to paths relative
+      # to the process's working directory, i.e. /app/data and /app/models.
+      - ./data:/app/data
+      - ./models:/app/models
