@@ -1,0 +1,82 @@
+# Fires on pushes to feature/* directly (fast feedback while building this
+# out) as well as feature/* -> development merges. Single-Deployment rolling
+# update -- no blue/green here (see docs/ARCHITECTURE.md for why dev is
+# scoped simpler than qa/prod).
+trigger:
+  branches:
+    include:
+      - feature/*
+
+pr: none
+
+variables:
+  environmentName: dev
+  # Name of the ADO Environment resource (Pipelines -> Environments) -- kept
+  # as its own variable rather than reusing environmentName in case it's ever
+  # created under a different name.
+  adoEnvironmentName: COAL-STOCKPILE-DEV
+  namespace: app-coal-stockpile
+  overlayPath: k8s/overlays/dev/backend
+  workloadKey: backend
+  imageRepository: eskom-forecast-api
+  serviceName: eskom-forecast-api
+  acrName: MAZACRSANDTINONPROD
+  # DTI-NONPROD-AZURE-CONNECTION is an Azure Resource Manager service
+  # connection, used for everything: az acr login, and az aks command invoke
+  # (no direct kubectl session -- this agent pool has no network path to the
+  # AKS API server, only to Azure Resource Manager). Same shared nonprod
+  # cluster other workloads' dev/qa environments use.
+  azureServiceConnection: DTI-NONPROD-AZURE-CONNECTION
+  resourceGroup: SAN-DTI-NONPROD-RG
+  aksClusterName: MAZ-AKS-SAN-DTI-NonProd
+
+# Every parameter below uses ${{ variables.x }} (compile-time template
+# expansion), not $(x) (runtime macro syntax) -- environmentName/imageRepository
+# in particular are used in compile-time-only contexts downstream (stage
+# names, dependsOn), which never go through runtime macro substitution.
+stages:
+  - template: templates/validate-stage.yml
+    parameters:
+      overlayPath: ${{ variables.overlayPath }}
+
+  - template: templates/build-scan-push.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      acrName: ${{ variables.acrName }}
+      imageRepository: ${{ variables.imageRepository }}
+      dockerfilePath: "."
+      buildContext: "."
+      baseImageRef: "python:3.11-slim"
+      baseImageBuildArgName: PYTHON_BASE_IMAGE
+      mirroredBaseRepo: "base/python:3.11-slim"
+      passCorporateCA: true
+
+  - template: templates/deploy-stage.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      environmentName: ${{ variables.environmentName }}
+      adoEnvironmentName: ${{ variables.adoEnvironmentName }}
+      namespace: ${{ variables.namespace }}
+      overlayPath: ${{ variables.overlayPath }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      resourceGroup: ${{ variables.resourceGroup }}
+      aksClusterName: ${{ variables.aksClusterName }}
+      acrName: ${{ variables.acrName }}
+      imageRepository: ${{ variables.imageRepository }}
+      serviceName: ${{ variables.serviceName }}
+      imageTag: $[ stageDependencies.BuildScanPush_backend.BuildScanPush.outputs['setImageTag.imageTag'] ]
+      colorEnabled: false
+
+  - template: templates/smoke-test-stage.yml
+    parameters:
+      workloadKey: ${{ variables.workloadKey }}
+      environmentName: ${{ variables.environmentName }}
+      namespace: ${{ variables.namespace }}
+      azureServiceConnection: ${{ variables.azureServiceConnection }}
+      resourceGroup: ${{ variables.resourceGroup }}
+      aksClusterName: ${{ variables.aksClusterName }}
+      imageRepository: ${{ variables.imageRepository }}
+      serviceName: ${{ variables.serviceName }}
+      colorEnabled: false
+      workloadKind: backend

@@ -1,0 +1,163 @@
+# Builds an image, scans it, and only pushes to ACR if the scan is clean.
+# imageTag output variable is consumed by deploy-stage.yml. Shared by both
+# workloads (backend/frontend) -- which base image to mirror and whether the
+# corporate-CA proxy build-args are needed differ per caller.
+#
+# Mirrors the Docker Hub base image into ACR first (az acr import,
+# server-side, no agent egress needed) rather than letting `docker build`
+# pull it directly -- this self-hosted pool has no direct route to the
+# internet, only proxy egress, and the docker daemon's own FROM-pull doesn't
+# go through HTTP_PROXY/HTTPS_PROXY build-args (those only affect RUN-step
+# processes inside the build, e.g. apt-get).
+parameters:
+  # Dash-free identifier ("backend"/"frontend") used only for the stage name
+  # and cross-stage dependsOn references -- ADO stage identifiers can't
+  # contain dashes, unlike imageRepository (e.g. "eskom-forecast-api").
+  - name: workloadKey
+    type: string
+  - name: azureServiceConnection
+    type: string
+  - name: acrName
+    type: string
+  - name: imageRepository
+    type: string
+  - name: dockerfilePath
+    type: string
+  - name: buildContext
+    type: string
+    default: "."
+  - name: baseImageRef
+    type: string
+  - name: baseImageBuildArgName
+    type: string
+  - name: mirroredBaseRepo
+    type: string
+  # Name kept as-is for minimal diff across the pipeline files that set it,
+  # but this no longer trusts a corporate CA cert (see corporateCaBuildArgs
+  # below) -- it only controls whether proxy build-args get passed, for
+  # RUN-step network calls (e.g. backend's apt-get/curl to
+  # packages.microsoft.com) that need to reach through the corporate proxy.
+  - name: passCorporateCA
+    type: boolean
+    default: false
+
+stages:
+  - stage: BuildScanPush_${{ parameters.workloadKey }}
+    displayName: "Build, scan, push ${{ parameters.imageRepository }}"
+    jobs:
+      - job: BuildScanPush
+        displayName: "docker build -> trivy image -> acr push"
+        pool:
+          name: default
+          demands:
+            - Agent.OS -equals Linux
+        variables:
+          imageTag: "$(Build.SourceVersion)"
+          # lower(): ACR resource names are case-insensitive for `az acr
+          # --name`, but the actual docker image reference/hostname isn't --
+          # BuildKit's credential-store lookup for registry auth is
+          # case-sensitive against the hostname `docker login` stored
+          # (always lowercase), so a mixed-case reference here silently
+          # falls back to an anonymous, unauthenticated pull instead of
+          # using the credentials `az acr login` just established.
+          fullImage: "${{ lower(parameters.acrName) }}.azurecr.io/${{ parameters.imageRepository }}:$(imageTag)"
+          mirroredBaseImage: "${{ lower(parameters.acrName) }}.azurecr.io/${{ parameters.mirroredBaseRepo }}"
+          # Conditional-insertion at the variables level (the only place a
+          # template if/else pair can pick between values here) -- can't be
+          # done as inline conditional text inside inlineScript's block
+          # scalar below, that's not valid template-expression placement.
+          # NOTE: never write a literal "dollar-brace-brace" sequence inside
+          # a comment anywhere in this file, even describing the syntax --
+          # ADO's template parser scans the raw file text for that token
+          # everywhere, including inside comments and bash # lines, and
+          # fails the whole pipeline with "An expression was expected" on
+          # any occurrence that isn't a complete, valid expression.
+          #
+          # Proxy build-args only -- no TRUST_CORPORATE_CA/cert-trust flag.
+          # An earlier version of this template also set
+          # TRUST_CORPORATE_CA=true, on the assumption this self-hosted
+          # agent's proxy TLS-intercepts (like some corporate endpoint
+          # machines do) and needs a root CA cert trusted inside the build
+          # to avoid CERTIFICATE_VERIFY_FAILED. A working pipeline for a
+          # different app on this same agent pool/proxy (WIMS) does its
+          # RUN-step network calls with proxy build-args alone, no cert
+          # handling at all -- and the CA cert file that flag depended on
+          # was never even committed (Dockerfile's TRUST_CORPORATE_CA
+          # mechanism still exists, default false, for local docker-compose
+          # builds on a Windows/Zscaler machine, a genuinely different
+          # situation from this agent). Follow the proven pattern here.
+          ${{ if eq(parameters.passCorporateCA, true) }}:
+            corporateCaBuildArgs: "--build-arg HTTP_PROXY=http://swgproxy.eskom.co.za:8080 --build-arg HTTPS_PROXY=http://swgproxy.eskom.co.za:8080"
+          ${{ else }}:
+            corporateCaBuildArgs: ""
+        steps:
+          # This is a shared self-hosted agent pool (other apps' pipelines
+          # run here too), and it fills up over time from accumulated Docker
+          # layers/images across every team's builds -- `docker build`/`az
+          # acr import --force` on every run adds to that, never removes
+          # from it. Clean up *before* building, not after, so a
+          # low-disk-space warning here doesn't turn into a hard "no space
+          # left on device" failure mid-build. `|| true` throughout: a
+          # cleanup failing is never a reason to fail the actual build.
+          - script: |
+              df -h /
+              docker system prune -af --volumes || true
+              rm -rf "$(Agent.TempDirectory)"/* || true
+              df -h /
+            displayName: "Clean up agent disk space"
+
+          # docker build's FROM pull of the mirrored base image is done by the
+          # docker daemon itself, which needs to be authenticated to ACR at
+          # the moment it runs -- that only works reliably if the `az acr
+          # login` and the `docker build` happen in the very same script
+          # execution (see docs/ARCHITECTURE.md).
+          - task: AzureCLI@2
+            displayName: "Mirror base image to ACR + docker build"
+            inputs:
+              azureSubscription: "${{ parameters.azureServiceConnection }}"
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -euo pipefail
+                echo "Importing ${{ parameters.baseImageRef }} -> $(mirroredBaseImage)"
+                az acr import \
+                  --name "${{ parameters.acrName }}" \
+                  --source "docker.io/library/${{ parameters.baseImageRef }}" \
+                  --image "${{ parameters.mirroredBaseRepo }}" \
+                  --force
+                az acr login --name "${{ parameters.acrName }}"
+
+                docker build \
+                  -t "$(fullImage)" \
+                  -f "${{ parameters.dockerfilePath }}/Dockerfile" \
+                  --build-arg ${{ parameters.baseImageBuildArgName }}="$(mirroredBaseImage)" \
+                  $(corporateCaBuildArgs) \
+                  "${{ parameters.buildContext }}"
+
+          - script: |
+              set -euo pipefail
+              curl -sfL -x http://swgproxy.eskom.co.za:8080 \
+                https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+                | sh -s -- -b "$(Agent.TempDirectory)"
+              "$(Agent.TempDirectory)/trivy" image --severity HIGH,CRITICAL --exit-code 1 --ignore-unfixed \
+                --ignorefile .trivyignore "$(fullImage)"
+            displayName: "trivy image scan (fails the build on HIGH/CRITICAL)"
+            env:
+              HTTPS_PROXY: http://swgproxy.eskom.co.za:8080
+              HTTP_PROXY: http://swgproxy.eskom.co.za:8080
+
+          - task: AzureCLI@2
+            displayName: "docker push (only reached if scan passed)"
+            inputs:
+              azureSubscription: "${{ parameters.azureServiceConnection }}"
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -euo pipefail
+                az acr login --name "${{ parameters.acrName }}"
+                docker push "$(fullImage)"
+
+          - script: |
+              echo "##vso[task.setvariable variable=imageTag;isOutput=true]$(imageTag)"
+            name: setImageTag
+            displayName: "Expose imageTag to downstream stages"

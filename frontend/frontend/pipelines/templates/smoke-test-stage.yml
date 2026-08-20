@@ -1,0 +1,134 @@
+# Runs directly against the pod(s) that were just deployed (dev's pods, or
+# qa/prod's inactive color), bypassing the client Service entirely -- this
+# checks the new release is healthy *before* anything is exposed to traffic.
+# Two layers:
+#   1. `kubectl wait --for=condition=Ready` on every matching pod (kubelet's
+#      own readinessProbe -- GET /healthz for both workloads, see
+#      k8s/base/{backend,frontend}/single/deployment.yaml).
+#   2. One extra check *inside* the pod, bypassing kube-proxy/the Service:
+#      backend -> a Python one-liner hitting localhost:8000/healthz directly
+#        (python3 is always present in the backend image -- see Dockerfile).
+#      frontend -> `nginx -t` (config loaded without error) -- nginx:alpine
+#        has no curl/wget to do an HTTP-level bypass check, so this is the
+#        closest equivalent: confirms the config the readiness probe already
+#        exercised is actually valid, not just that *a* process is listening.
+#
+# Reaches the cluster entirely via `az aks command invoke` -- see the comment
+# at the top of deploy-stage.yml for why (no direct kubectl session from this
+# agent pool).
+parameters:
+  # Dash-free identifier ("backend"/"frontend") used only for the stage name
+  # and cross-stage dependsOn references -- ADO stage identifiers can't
+  # contain dashes, unlike imageRepository (e.g. "eskom-forecast-api").
+  - name: workloadKey
+    type: string
+  - name: environmentName
+    type: string
+  - name: namespace
+    type: string
+  - name: azureServiceConnection
+    type: string
+  - name: resourceGroup
+    type: string
+  - name: aksClusterName
+    type: string
+  - name: imageRepository
+    type: string
+  - name: serviceName
+    type: string
+  - name: colorEnabled
+    type: boolean
+    default: false
+  - name: workloadKind
+    type: string
+    values:
+      - backend
+      - frontend
+
+stages:
+  - stage: SmokeTest_${{ parameters.environmentName }}_${{ parameters.workloadKey }}
+    displayName: "Smoke test ${{ parameters.imageRepository }} (${{ parameters.environmentName }})"
+    dependsOn: Deploy_${{ parameters.environmentName }}_${{ parameters.workloadKey }}
+    jobs:
+      - job: SmokeTest
+        pool:
+          name: default
+          demands:
+            - Agent.OS -equals Linux
+        steps:
+          - task: AzureCLI@2
+            displayName: "Pod readiness + bypass-the-Service health check"
+            inputs:
+              azureSubscription: "${{ parameters.azureServiceConnection }}"
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -euo pipefail
+                RESOURCE_GROUP="${{ parameters.resourceGroup }}"
+                AKS_CLUSTER_NAME="${{ parameters.aksClusterName }}"
+                NAMESPACE="${{ parameters.namespace }}"
+                SERVICE_NAME="${{ parameters.serviceName }}"
+
+                # See deploy-stage.yml for what this does and why.
+                aks_cmd() {
+                  local cmd="$1"; shift
+                  local file_args=()
+                  local f
+                  for f in "$@"; do file_args+=(--file "$f"); done
+                  local result
+                  result=$(az aks command invoke \
+                    --resource-group "$RESOURCE_GROUP" \
+                    --name "$AKS_CLUSTER_NAME" \
+                    --command "$cmd" \
+                    "${file_args[@]}" \
+                    --output json)
+                  echo "$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('logs') or '', end='')"
+                  local code
+                  code=$(echo "$result" | python3 -c "import sys,json; print(json.load(sys.stdin)['exitCode'])")
+                  return "$code"
+                }
+
+                if [ "${{ parameters.colorEnabled }}" = "True" ]; then
+                  ACTIVE_COLOR=$(aks_cmd "kubectl get svc $SERVICE_NAME -n $NAMESPACE -o jsonpath='{.spec.selector.color}'")
+                  if [ "$ACTIVE_COLOR" = "blue" ]; then TARGET_COLOR=green; else TARGET_COLOR=blue; fi
+                  SELECTOR="app=$SERVICE_NAME,color=$TARGET_COLOR"
+                else
+                  SELECTOR="app=$SERVICE_NAME"
+                fi
+                echo "Testing pods matching: $SELECTOR"
+
+                # Poll readiness with short per-call timeouts rather than one long
+                # blocking `kubectl wait` -- az aks command invoke has its own
+                # internal wait budget shorter than 5 minutes.
+                DEADLINE=$((SECONDS + 300))
+                READY=false
+                while [ "$SECONDS" -lt "$DEADLINE" ]; do
+                  if aks_cmd "kubectl wait --for=condition=Ready pod -l $SELECTOR -n $NAMESPACE --timeout=15s"; then
+                    READY=true
+                    break
+                  fi
+                  echo "Still waiting on pods matching $SELECTOR... (${SECONDS}s elapsed)"
+                done
+                if [ "$READY" != "true" ]; then
+                  echo "##vso[task.logissue type=error]Pods matching $SELECTOR did not become Ready within 5 minutes."
+                  exit 1
+                fi
+
+                TARGET_POD=$(aks_cmd "kubectl get pods -l $SELECTOR -n $NAMESPACE -o jsonpath='{.items[0].metadata.name}'")
+                echo "Bypass-the-Service check against pod: $TARGET_POD"
+
+                # workloadKind is a plain string parameter, substituted here
+                # as ordinary compile-time text (same mechanism as the
+                # colorEnabled substitution above), not the mapping-only
+                # template if/else conditional-insertion syntax used
+                # elsewhere in these templates (see build-scan-push.yml).
+                if [ "${{ parameters.workloadKind }}" = "backend" ]; then
+                  CHECK_CMD="kubectl exec -n $NAMESPACE $TARGET_POD -- python3 -c \"import urllib.request,sys; r=urllib.request.urlopen('http://localhost:8000/healthz', timeout=5); sys.exit(0 if r.status==200 else 1)\""
+                else
+                  CHECK_CMD="kubectl exec -n $NAMESPACE $TARGET_POD -- nginx -t"
+                fi
+
+                if ! aks_cmd "$CHECK_CMD"; then
+                  echo "##vso[task.logissue type=error]Bypass-the-Service health check failed on $TARGET_POD."
+                  exit 1
+                fi

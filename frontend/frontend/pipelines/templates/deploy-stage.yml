@@ -1,0 +1,197 @@
+# dev (colorEnabled: false): bumps the single Deployment's image and applies
+# the whole overlay -- a normal in-place rolling update.
+#
+# qa/prod (colorEnabled: true): only ever bumps the INACTIVE color's image
+# before applying. The active color's local kustomize copy is pinned to
+# whatever image is *already running* (queried live from the cluster) so
+# that a single apply never touches the pod currently serving traffic --
+# these are stateless HTTP workloads, so there's no data-layer equivalent to
+# protect, only "don't touch the color that's live". First-time bootstrap
+# (the client Service doesn't exist yet, or has no color selector) is the
+# one exception: both colors get the new image, since nothing is serving
+# traffic yet for there to be an "inactive" side to protect.
+#
+# Reaches the cluster entirely via `az aks command invoke` (no Kubernetes
+# Service Connection, no direct kubectl session) -- this self-hosted agent
+# pool has no direct network path to the AKS API server, only to Azure
+# Resource Manager via the ARM service connection. kustomize itself still
+# runs locally on the agent (no cluster access needed to render/edit YAML);
+# only the final `kubectl apply` of the rendered output goes through command
+# invoke, via --file upload.
+parameters:
+  # Dash-free identifier ("backend"/"frontend") used only for the stage name
+  # and cross-stage dependsOn references -- ADO stage identifiers can't
+  # contain dashes, unlike imageRepository (e.g. "eskom-forecast-api").
+  - name: workloadKey
+    type: string
+  - name: environmentName
+    type: string
+  # Name of the ADO Environment resource (Pipelines -> Environments) this
+  # deployment job targets -- a separate concept from environmentName, which
+  # drives stage naming/namespace/etc.
+  - name: adoEnvironmentName
+    type: string
+  - name: namespace
+    type: string
+  - name: overlayPath
+    type: string
+  - name: azureServiceConnection
+    type: string
+  - name: resourceGroup
+    type: string
+  - name: aksClusterName
+    type: string
+  - name: acrName
+    type: string
+  - name: imageRepository
+    type: string
+  - name: imageTag
+    type: string
+  - name: colorEnabled
+    type: boolean
+    default: false
+  # Client Service name -- also the Deployment's base name (single Deployment
+  # for dev, or the `<serviceName>-blue`/`-green` pair for qa/prod).
+  - name: serviceName
+    type: string
+
+stages:
+  - stage: Deploy_${{ parameters.environmentName }}_${{ parameters.workloadKey }}
+    displayName: "Deploy ${{ parameters.imageRepository }} to ${{ parameters.environmentName }}"
+    dependsOn: BuildScanPush_${{ parameters.workloadKey }}
+    variables:
+      # imageTag is typically passed in as a $[ stageDependencies... ] runtime
+      # expression from build-scan-push.yml's output variable -- that only
+      # resolves correctly inside a `variables:` block, never when
+      # substituted directly into a script string via
+      # ${{ parameters.imageTag }}, so it's captured here once and referenced
+      # below as the macro $(imageTag).
+      imageTag: ${{ parameters.imageTag }}
+    jobs:
+      - deployment: Deploy
+        displayName: "Apply ${{ parameters.overlayPath }}"
+        environment: ${{ parameters.adoEnvironmentName }}
+        pool:
+          name: default
+          demands:
+            - Agent.OS -equals Linux
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - script: |
+                    set -euo pipefail
+                    curl -sL -x http://swgproxy.eskom.co.za:8080 \
+                      "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz" \
+                      | tar xz -C "$(Agent.TempDirectory)" kustomize
+                    echo "##vso[task.prependpath]$(Agent.TempDirectory)"
+                  displayName: "Install standalone kustomize (needed for `edit set image`)"
+                  env:
+                    HTTPS_PROXY: http://swgproxy.eskom.co.za:8080
+                    HTTP_PROXY: http://swgproxy.eskom.co.za:8080
+
+                - task: AzureCLI@2
+                  displayName: "Bump image + apply (az aks command invoke)"
+                  inputs:
+                    azureSubscription: "${{ parameters.azureServiceConnection }}"
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -euo pipefail
+                      RESOURCE_GROUP="${{ parameters.resourceGroup }}"
+                      AKS_CLUSTER_NAME="${{ parameters.aksClusterName }}"
+                      NAMESPACE="${{ parameters.namespace }}"
+                      OVERLAY="${{ parameters.overlayPath }}"
+                      SERVICE_NAME="${{ parameters.serviceName }}"
+                      IMAGE_REPO="${{ parameters.imageRepository }}"
+                      PLACEHOLDER_IMAGE="PLACEHOLDER_ACR_NAME.azurecr.io/${IMAGE_REPO}"
+                      # lower(): see the same fix/comment in build-scan-push.yml --
+                      # the pushed image tag must exactly match what was built
+                      # there, hostname case included, or this pull will fail
+                      # the same way.
+                      NEW_IMAGE="${{ lower(parameters.acrName) }}.azurecr.io/${IMAGE_REPO}:$(imageTag)"
+                      RENDERED="$(Agent.TempDirectory)/rendered.yaml"
+
+                      # Runs a kubectl command inside the cluster via az aks command
+                      # invoke (no direct kubectl session). Prints the remote
+                      # command's stdout/stderr and returns its exit code -- callers
+                      # can rely on `set -e` the same as a normal command. Optional
+                      # extra args are local file paths uploaded alongside (referenced
+                      # in $1 by basename, per az's own file-upload convention).
+                      aks_cmd() {
+                        local cmd="$1"; shift
+                        local file_args=()
+                        local f
+                        for f in "$@"; do file_args+=(--file "$f"); done
+                        local result
+                        result=$(az aks command invoke \
+                          --resource-group "$RESOURCE_GROUP" \
+                          --name "$AKS_CLUSTER_NAME" \
+                          --command "$cmd" \
+                          "${file_args[@]}" \
+                          --output json)
+                        echo "$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('logs') or '', end='')"
+                        local code
+                        code=$(echo "$result" | python3 -c "import sys,json; print(json.load(sys.stdin)['exitCode'])")
+                        return "$code"
+                      }
+
+                      if [ "${{ parameters.colorEnabled }}" = "False" ]; then
+                        (cd "$OVERLAY" && kustomize edit set image "$PLACEHOLDER_IMAGE=$NEW_IMAGE")
+                        kustomize build "$OVERLAY" > "$RENDERED"
+                        aks_cmd "kubectl apply -f rendered.yaml -n $NAMESPACE" "$RENDERED"
+                      else
+                        set +e
+                        ACTIVE_COLOR=$(aks_cmd "kubectl get svc $SERVICE_NAME -n $NAMESPACE -o jsonpath='{.spec.selector.color}' 2>/dev/null")
+                        ACTIVE_LOOKUP_STATUS=$?
+                        set -e
+                        [ "$ACTIVE_LOOKUP_STATUS" -ne 0 ] && ACTIVE_COLOR=""
+
+                        if [ -z "$ACTIVE_COLOR" ]; then
+                          echo "No existing active color found -- treating as first-time bootstrap: both colors get the new image."
+                          (cd "$OVERLAY/blue"  && kustomize edit set image "$PLACEHOLDER_IMAGE=$NEW_IMAGE")
+                          (cd "$OVERLAY/green" && kustomize edit set image "$PLACEHOLDER_IMAGE=$NEW_IMAGE")
+                        else
+                          if [ "$ACTIVE_COLOR" = "blue" ]; then INACTIVE_COLOR=green; else INACTIVE_COLOR=blue; fi
+                          echo "Active color: $ACTIVE_COLOR -- deploying new image only to inactive color: $INACTIVE_COLOR"
+
+                          ACTIVE_CURRENT_IMAGE=$(aks_cmd "kubectl get deployment $SERVICE_NAME-$ACTIVE_COLOR -n $NAMESPACE -o jsonpath='{.spec.template.spec.containers[0].image}'")
+
+                          # Pin active to exactly what's already running, so
+                          # applying the whole overlay is a no-op for it.
+                          (cd "$OVERLAY/$ACTIVE_COLOR"   && kustomize edit set image "$PLACEHOLDER_IMAGE=$ACTIVE_CURRENT_IMAGE")
+                          (cd "$OVERLAY/$INACTIVE_COLOR" && kustomize edit set image "$PLACEHOLDER_IMAGE=$NEW_IMAGE")
+                        fi
+
+                        kustomize build "$OVERLAY" > "$RENDERED"
+                        aks_cmd "kubectl apply -f rendered.yaml -n $NAMESPACE" "$RENDERED"
+                      fi
+
+                      # Poll rollout status with short per-call timeouts rather than
+                      # one long blocking call -- az aks command invoke has its own
+                      # internal wait budget shorter than 5 minutes, and a single
+                      # long "rollout status --timeout=5m" call can hit that and
+                      # return no usable exit code at all.
+                      wait_for_rollout() {
+                        local target="$1"
+                        local deadline=$((SECONDS + 300))
+                        while [ "$SECONDS" -lt "$deadline" ]; do
+                          if aks_cmd "kubectl rollout status $target -n $NAMESPACE --timeout=15s"; then
+                            return 0
+                          fi
+                          echo "Still waiting on $target... (${SECONDS}s elapsed)"
+                        done
+                        echo "##vso[task.logissue type=error]$target did not roll out within 5 minutes."
+                        return 1
+                      }
+
+                      if [ "${{ parameters.colorEnabled }}" = "False" ]; then
+                        wait_for_rollout "deployment/$SERVICE_NAME"
+                      elif [ -n "$ACTIVE_COLOR" ]; then
+                        wait_for_rollout "deployment/$SERVICE_NAME-$INACTIVE_COLOR"
+                      else
+                        wait_for_rollout "deployment/$SERVICE_NAME-blue"
+                        wait_for_rollout "deployment/$SERVICE_NAME-green"
+                      fi
