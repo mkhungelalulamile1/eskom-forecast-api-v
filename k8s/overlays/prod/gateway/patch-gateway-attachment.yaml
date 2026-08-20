@@ -1,0 +1,40 @@
+# Prod is on its own AKS cluster once provisioned, with its own separate NGF
+# install -- whether that install runs in the same static (single-Gateway)
+# mode as nonprod's is unconfirmed. If it does, this needs to attach to
+# whatever Gateway already holds that cluster's GatewayClass slot, the same
+# way dev/qa attach to lineai-gateway (see the postmortem comment in
+# k8s/base/gateway/gateway.yaml). If prod's NGF is configured differently
+# (per-Gateway/dynamic provisioning), this app may be able to own its
+# Gateway there after all -- confirm before assuming either way.
+#
+# IF this ends up attaching to a shared Gateway (not owning its own): both
+# parentRefs below MUST get a `sectionName` for the specific listener meant
+# for this app, and `hostnames` should be set too -- omitting either caused
+# a real incident on dev (2026-07-26, see the postmortem in
+# k8s/base/gateway/gateway.yaml): a route with no sectionName attaches to
+# every listener that allows routes from this namespace, not just its own.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: coalstockpile-routes
+spec:
+  parentRefs:
+    - name: PLACEHOLDER_GATEWAY_NAME_PROD
+      namespace: PLACEHOLDER_GATEWAY_NAMESPACE_PROD
+---
+# Grants that Gateway's https listener permission to reference our TLS
+# Secret across namespaces, if it turns out to live in a different
+# namespace than this app (unknown until prod's NGF setup is confirmed).
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-gateway-tls-secret
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      namespace: PLACEHOLDER_GATEWAY_NAMESPACE_PROD
+  to:
+    - group: ""
+      kind: Secret
+      name: PLACEHOLDER_TLS_SECRET_NAME_PROD

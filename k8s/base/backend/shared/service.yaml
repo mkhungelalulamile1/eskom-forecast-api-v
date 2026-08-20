@@ -1,0 +1,19 @@
+# ClusterIP -- the Gateway (k8s/base/gateway) is the single entry point into
+# this app; this Service only needs to be reachable from the Gateway's data
+# plane and the frontend's in-cluster reverse proxy, not given its own Azure
+# LoadBalancer. `color: blue` is the initial active color for a fresh
+# environment; cutover-stage.yml flips this selector between blue/green on
+# every release, and that flip *is* the blue/green cutover.
+apiVersion: v1
+kind: Service
+metadata:
+  name: eskom-forecast-api
+spec:
+  type: ClusterIP
+  selector:
+    app: eskom-forecast-api
+    color: blue
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000

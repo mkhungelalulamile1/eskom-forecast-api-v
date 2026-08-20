@@ -1,0 +1,28 @@
+# qa's non-secret backend config. SQL_DATABASE_NAME is still a placeholder.
+# AZURE_STORAGE_ACCOUNT_URL is a best guess (dev's confirmed account,
+# sasandtidiagnonprod01, is shared nonprod infra -- qa likely uses the same
+# one, but this hasn't been explicitly confirmed for qa). Fill in before
+# applying.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coalstockpile-config
+data:
+  # APP_MODE (src/config.py) defaults to "development" when unset, which
+  # forces Config.use_local_storage=True regardless of Azure Storage being
+  # configured below -- must be explicitly non-"development".
+  APP_MODE: "production"
+  BRONZE_CONTAINER_NAME: "bronze"
+  GOLD_CONTAINER_NAME: "gold"
+  METRICS_CONTAINER_NAME: "metrics"
+  WEATHER_CONTAINER_NAME: "weather"
+  # Predicted, not yet confirmed live: namespace mssql-qa doesn't exist on
+  # the cluster yet (only mssql-dev does, as of this writing) -- this is the
+  # value it should be once qa's SQL Server environment is bootstrapped,
+  # following the same mssql.<namespace>.svc.cluster.local pattern dev
+  # already confirmed. See docs/RUNBOOK.md.
+  SQL_SERVER_HOSTNAME: "mssql.mssql-qa.svc.cluster.local"
+  SQL_DATABASE_NAME: "PLACEHOLDER_SQL_DATABASE_NAME_QA"
+  NUM_ENTITIES: "15"
+  NUM_YEARS: "20"
+  AZURE_STORAGE_ACCOUNT_URL: "https://sasandtidiagnonprod01.blob.core.windows.net"

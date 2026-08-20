@@ -1,0 +1,47 @@
+# qa shares the same cluster as dev, so it also attaches to gateway
+# (namespace nginx-gateway) -- see the postmortem comment in
+# k8s/base/gateway/gateway.yaml for why there's no Gateway object of our
+# own. Its owner still needs to add two listeners (http+https) for a real
+# qa hostname (following the csm-<env>.digi-incubator.co.za convention,
+# e.g. csm-qa.digi-incubator.co.za, listeners named csm-qa-http/csm-qa-https
+# following dev's naming) -- not yet requested, unlike dev's.
+#
+# sectionName is mandatory on both parentRefs (2026-07-26 incident on dev:
+# without it, a route attaches to EVERY listener that allows routes from our
+# namespace, not just the one meant for it -- see the postmortem in
+# k8s/base/gateway/gateway.yaml). hostnames is defense-in-depth for the same
+# reason. Both are filled in with qa's expected values now so this can't
+# regress once qa's listener actually exists -- update PLACEHOLDER_HOSTNAME_QA
+# to the real hostname if it ends up different from this convention.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: coalstockpile-routes
+spec:
+  parentRefs:
+    - name: gateway
+      namespace: nginx-gateway
+      sectionName: csm-qa-http
+    - name: gateway
+      namespace: nginx-gateway
+      sectionName: csm-qa-https
+  hostnames:
+    - PLACEHOLDER_HOSTNAME_QA
+---
+# Grants the gateway's https listener permission to reference our TLS
+# Secret across namespaces once qa has its own hostname/cert -- see the
+# same pattern in overlays/dev/gateway/patch-gateway-attachment.yaml.
+# PLACEHOLDER_TLS_SECRET_NAME_QA until a cert is issued and loaded.
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-gateway-tls-secret
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      namespace: nginx-gateway
+  to:
+    - group: ""
+      kind: Secret
+      name: PLACEHOLDER_TLS_SECRET_NAME_QA

@@ -1,0 +1,37 @@
+# dev's non-secret backend config -- moved from k8s/common.yaml verbatim,
+# except SQL_SERVER_HOSTNAME (see below).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coalstockpile-config
+data:
+  # APP_MODE (src/config.py) defaults to "development" when unset, which
+  # forces Config.use_local_storage=True regardless of Azure Storage being
+  # configured below -- src/ui.py would then try reading local parquet
+  # files that don't exist in this pod instead of Blob Storage. Must be
+  # explicitly non-"development" in every real environment.
+  APP_MODE: "production"
+  BRONZE_CONTAINER_NAME: "bronze"
+  GOLD_CONTAINER_NAME: "gold"
+  METRICS_CONTAINER_NAME: "metrics"
+  WEATHER_CONTAINER_NAME: "weather"
+  # In-cluster SQL Server, not Azure SQL -- the `mssql` ClusterIP Service in
+  # namespace mssql-dev (confirmed live: pod mssql-0 Running, Service
+  # 10.10.200.40:1433). Cross-namespace, so must be the namespace-qualified
+  # form, not a bare "mssql" (unlike this app's own frontend->backend
+  # same-namespace DNS -- see frontend/nginx.conf). See docs/ARCHITECTURE.md
+  # "Database" -- mssql-dev's NetworkPolicy already allows this
+  # cross-namespace connection (confirmed live), but the target database and
+  # a dedicated SQL login for this app still need to be created there.
+  SQL_SERVER_HOSTNAME: "mssql.mssql-dev.svc.cluster.local"
+  SQL_DATABASE_NAME: "COAL_STOCKPILE_MODEL"
+  NUM_ENTITIES: "15"
+  NUM_YEARS: "20"
+  # Set to the Storage account's blob endpoint; auth happens via the pod's
+  # Workload Identity federated credential (see serviceaccount.yaml), not a
+  # key. sasandtidiagnonprod01 confirmed live (same shared nonprod storage
+  # account other workloads on this cluster use) -- but the
+  # bronze/gold/metrics/weather containers within it, and the Workload
+  # Identity's "Storage Blob Data Contributor" role assignment on it, are not
+  # confirmed and very likely still need creating (see docs/RUNBOOK.md).
+  AZURE_STORAGE_ACCOUNT_URL: "https://sasandtidiagnonprod01.blob.core.windows.net"

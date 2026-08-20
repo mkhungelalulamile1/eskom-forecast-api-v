@@ -1,0 +1,25 @@
+# Default-deny, then explicitly allow port 8080 from the NGF gateway
+# data-plane namespace only -- the frontend has no other legitimate caller
+# in-cluster. NetworkPolicy filters on the actual destination (container)
+# port after Service DNAT, not the Service's own port -- the container
+# listens on 8080, not 80 (uid 101/nginx can't bind a privileged port, see
+# frontend/Dockerfile), even though the Service itself is still exposed as
+# port 80.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: coalstockpilefrontend-allow-8080
+spec:
+  podSelector:
+    matchLabels:
+      app: coalstockpilefrontend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: nginx-gateway
+      ports:
+        - protocol: TCP
+          port: 8080

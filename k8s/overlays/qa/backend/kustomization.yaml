@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: app-coal-stockpile-qa
+labels:
+  - pairs:
+      env: qa
+    includeSelectors: true
+resources:
+  - namespace.yaml
+  - ../../../base/backend/shared
+  - configmap.yaml
+  - blue
+  - green
+patches:
+  - path: patch-serviceaccount.yaml
+  - path: patch-secretproviderclass.yaml
+# No images: transformer here on purpose -- it would retarget BOTH blue and
+# green to the same tag in one shot, which defeats blue/green. Each color's
+# own kustomization.yaml (blue/, green/) owns its image tag instead, so
+# deploy-stage.yml can bump only the inactive color's.

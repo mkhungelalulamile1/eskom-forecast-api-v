@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../../../base/backend/color
+nameSuffix: "-blue"
+labels:
+  - pairs:
+      color: blue
+    includeSelectors: true
+# Owned independently of green/'s -- deploy-stage.yml runs
+# `kustomize edit set image` in only the inactive color's directory, so a
+# release only ever bumps one color's tag at a time.
+images:
+  - name: PLACEHOLDER_ACR_NAME.azurecr.io/eskom-forecast-api
+    newName: PLACEHOLDER_ACR_NAME.azurecr.io/eskom-forecast-api
+    newTag: PLACEHOLDER_TAG
