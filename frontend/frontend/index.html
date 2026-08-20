@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eskom Forecaster Dashboard</title>
+    <meta name="description" content="Interactive visual dashboard to monitor tactical daily and strategic monthly predictions for coal Burn and Supply.">
+    <!-- Google Fonts: Roboto / Roboto Slab (matches eskom.co.za) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Slab:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <style>
+        :root {
+            /* Eskom brand palette: primary navy blue + white secondary */
+            --eskom-blue: #003896;
+            --eskom-blue-light: #1890d7;
+            --bg-gradient-start: #f8fafc;
+            --bg-gradient-end: #eef3f9;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-border: rgba(0, 56, 150, 0.12);
+            --card-border-focus: rgba(0, 56, 150, 0.5);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --accent-glow: rgba(0, 56, 150, 0.08);
+            --accent-solid: #003896;
+            --accent-solid-hover: #002a70;
+            --grid-color: rgba(0, 56, 150, 0.06);
+            --eskom-logo-url: url('data:image/png;base64,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');
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: radial-gradient(circle at 50% 0%, #e6f0fb 0%, var(--bg-gradient-start) 70%, var(--bg-gradient-end) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        header {
+            padding: 2rem 4%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.6);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .initialize-modal{
+
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,.45);
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            z-index:9999;
+        }
+
+        .hidden{
+            display:none;
+        }
+
+        .initialize-card{
+            background:white;
+            width:420px;
+            border-radius:12px;
+            padding:30px;
+            box-shadow:0 12px 40px rgba(0,0,0,.25);
+            text-align:center;
+        }
+
+        .progress-bar{
+            width:100%;
+            height:18px;
+            background:#e6e6e6;
+            border-radius:10px;
+            overflow:hidden;
+            margin-top:20px;
+        }
+
+        .progress-fill{
+            width:0%;
+            height:100%;
+            background:#1E88E5;
+            transition:width .4s ease;
+        }
+
+        .progress-percent{
+            margin-top:15px;
+            font-size:18px;
+            font-weight:bold;
+        }
+
+        .initialize-button{
+            width:48px;
+            height:48px;
+            border-radius:50%;
+            border:none;
+            background:#003896;
+            color:white;
+            font-size:22px;
+            cursor:pointer;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            transition:.25s;
+            box-shadow:0 4px 12px rgba(0,0,0,.2);
+        }
+
+        .initialize-button:hover{
+            background:#002a70;
+            transform:scale(1.05);
+        }
+
+        /* Eskom watermark: fixed behind all page content, very low opacity so
+           it reads as a subtle brand mark rather than competing with data. */
+        .brand-watermark {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background-color: var(--eskom-blue);
+            opacity: 0.035;
+            -webkit-mask-image: var(--eskom-logo-url);
+            mask-image: var(--eskom-logo-url);
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
+            -webkit-mask-size: min(70vw, 900px);
+            mask-size: min(70vw, 900px);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+        }
+
+        .eskom-logo-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--eskom-blue);
+            border-radius: 10px;
+            padding: 0.5rem 0.7rem;
+            flex-shrink: 0;
+        }
+
+        .eskom-logo-chip img {
+            display: block;
+            height: 28px;
+            width: auto;
+        }
+
+        .logo-container h1 {
+            font-family: 'Roboto Slab', serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--eskom-blue) 0%, var(--eskom-blue-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-container p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .control-group label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+        }
+
+        select {
+            background: rgba(0, 56, 150, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            padding: 0.6rem 2rem 0.6rem 1rem;
+            border-radius: 10px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23003896'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1rem;
+        }
+
+        select:hover {
+            background-color: rgba(0, 56, 150, 0.08);
+            border-color: rgba(0, 56, 150, 0.25);
+        }
+
+        select:focus {
+            border-color: var(--accent-solid);
+            box-shadow: 0 0 0 3px rgba(0, 56, 150, 0.15);
+        }
+
+        main {
+            flex: 1;
+            padding: 2rem 4%;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* KPI Dashboard Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(12px);
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at top left, var(--accent-glow), transparent 60%);
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--card-border-focus);
+            box-shadow: 0 10px 25px -5px rgba(0, 56, 150, 0.08), 0 0 15px 0 rgba(0, 56, 150, 0.05);
+        }
+
+        .kpi-title-metric {
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: normal;
+            opacity: 0.7;
+        }
+
+        .kpi-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-top: 0.5rem;
+            background: linear-gradient(to right, #0f172a, #003896);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .kpi-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        /* Two-value layout for the Average Forecast card (daily + monthly side by side) */
+        .kpi-value-split {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .kpi-value-split .kpi-sub {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kpi-value-split .kpi-sub-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-value-split .kpi-sub-value {
+            font-size: 1.7rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #0f172a, #003896);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Visualization container */
+        .chart-container-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(12px);
+            position: relative;
+            min-height: 550px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title h2 {
+            font-family: 'Roboto Slab', serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Stale-data banner: shown when a live API fetch fails and the
+           dashboard falls back to the last cached response from localStorage,
+           so the user knows what they're looking at isn't necessarily current. */
+        #stale-data-banner {
+            background: #fbf0dd;
+            border: 1px solid #e3c481;
+            color: #8a5a10;
+            border-radius: 8px;
+            padding: 0.7rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+        }
+
+        /* Section divider: groups related cards (e.g. Forecast, Model
+           Performance) under a shared heading, separated by a rule. */
+        .section-divider {
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
+            margin-bottom: -1rem;
+        }
+
+        .section-divider h2 {
+            font-family: 'Roboto Slab', serif;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--eskom-blue);
+            white-space: nowrap;
+        }
+
+        .section-divider .rule {
+            flex: 1;
+            height: 1px;
+            background: var(--card-border);
+        }
+
+        .chart-title p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .chart-wrapper {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+        }
+
+        #forecastChart {
+            width: 100%;
+            height: 450px;
+        }
+
+        /* Loader & Status Styles */
+        .loader-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            border-radius: 20px;
+            transition: opacity 0.3s ease;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 56, 150, 0.1);
+            border-top-color: var(--accent-solid);
+            border-radius: 50%;
+            animation: spin 1s infinite linear;
+        }
+
+        .loader-text {
+            margin-top: 1rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        /* Footer */
+        footer {
+            padding: 2rem 4%;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--card-border);
+            margin-top: auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Weather Summary Tiles */
+        .weather-tile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 1rem;
+        }
+
+        .weather-tile {
+            background: rgba(0, 56, 150, 0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .weather-tile-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .weather-tile-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-top: 0.35rem;
+            color: var(--text-primary);
+        }
+
+        .weather-tile-unit {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive modifications */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1.5rem;
+            }
+
+            .controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .chart-container-card {
+                padding: 1rem;
+                min-height: 450px;
+            }
+
+            #forecastChart {
+                height: 350px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="brand-watermark" aria-hidden="true"></div>
+
+    <header>
+        <div class="logo-container">
+            <span class="eskom-logo-chip">
+                <img src="data:image/png;base64,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" alt="Eskom logo">
+            </span>
+            <div>
+                <h1>Forecaster Dashboard</h1>
+                <p>Coal Burn &amp; Supply Inference Pipeline Visualizer</p>
+            </div>
+        </div>
+        <div class="controls">
+            <div class="control-group">
+                <label for="horizon-select">Horizon</label>
+                <select id="horizon-select" onchange="onHorizonChange()">
+                    <option value="daily">Tactical (Daily - 90 Days)</option>
+                    <option value="monthly">Strategic (Monthly - 36 Months)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="metric-select">Metric</label>
+                <select id="metric-select" onchange="onSelectionChange()">
+                    <option value="Input">Burn Predictions</option>
+                    <option value="Replenishment">Supply Predictions</option>
+                    <option value="Stockpile">Stockpile</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="entity-select">Power Station</label>
+                <select id="entity-select" onchange="onSelectionChange()">
+                    <!-- Dynamically filled -->
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="scenario-select">Scenario</label>
+                <select id="scenario-select" onchange="onSelectionChange()">
+                    <option value="actual" selected>Actual (baseline)</option>
+                    <option value="weather_hot_dry">Hot &amp; Dry</option>
+                    <option value="weather_hot_wet">Hot &amp; Wet</option>
+                    <option value="weather_cold_dry">Cold &amp; Dry</option>
+                    <option value="weather_cold_wet">Cold &amp; Wet</option>
+                </select>
+            </div>
+            <div class="control-group" id="stockpile-unit-group" style="display: none;">
+                <label for="stockpile-unit-toggle">Stockpile Unit</label>
+                <select id="stockpile-unit-toggle" onchange="onSelectionChange()">
+                    <option value="tons">Tons</option>
+                    <option value="days">Days of Supply</option>
+                </select>
+            </div>
+        </div>
+        <button id="initializeBtn" class="initialize-button" title="Initialize Forecast Pipeline">
+            🚀
+        </button>
+    </header>
+
+    <main>
+        <div id="stale-data-banner" style="display: none;"></div>
+
+        <!-- Forecast Section -->
+        <div class="section-divider">
+            <h2>Forecast</h2>
+            <div class="rule"></div>
+        </div>
+
+        <!-- KPI Row -->
+        <section class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">Average Forecast <span class="kpi-title-metric" id="kpi-title-avg">(Mean)</span></div>
+                <div class="kpi-value-split">
+                    <div class="kpi-sub">
+                        <div class="kpi-sub-label">Daily</div>
+                        <div class="kpi-sub-value" id="kpi-avg-daily">-</div>
+                    </div>
+                    <div class="kpi-sub">
+                        <div class="kpi-sub-label">Monthly</div>
+                        <div class="kpi-sub-value" id="kpi-avg-monthly">-</div>
+                    </div>
+                </div>
+                <div class="kpi-desc">Mean prediction for the selected power station</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Peak Demand <span class="kpi-title-metric" id="kpi-title-peak">(Max)</span></div>
+                <div class="kpi-value" id="kpi-peak">-</div>
+                <div class="kpi-desc">Maximum single-point forecast value</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Total Projected Volume <span class="kpi-title-metric" id="kpi-title-total">(Sum)</span></div>
+                <div class="kpi-value" id="kpi-total">-</div>
+                <div class="kpi-desc">Cumulative sum of forecasts</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Forecast Horizon <span class="kpi-title-metric" id="kpi-title-horizon">(Count)</span></div>
+                <div class="kpi-value" id="kpi-horizon">-</div>
+                <div class="kpi-desc">Number of predicted intervals</div>
+            </div>
+        </section>
+
+        <!-- Chart Card -->
+        <section class="chart-container-card">
+            <div id="loader" class="loader-overlay">
+                <div class="spinner"></div>
+                <div class="loader-text" id="loader-status">Fetching prediction data...</div>
+            </div>
+            <div class="chart-header">
+                <div class="chart-title">
+                    <h2 id="chart-main-title">Predictions Chart</h2>
+                    <p id="chart-sub-title">Visualizing model outputs for the selected power station</p>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <div id="forecastChart"></div>
+            </div>
+        </section>
+
+        <!-- Weather Summary Panel -->
+        <section class="chart-container-card" id="weather-summary-card" style="min-height: auto; display: none;">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <h2>Weather Summary — <span id="weather-summary-date">-</span></h2>
+                    <p>Conditions at <span id="weather-summary-station">the selected power station</span>'s location, from the Open-Meteo weather feed</p>
+                </div>
+            </div>
+            <div class="weather-tile-grid" id="weather-summary-tiles"></div>
+        </section>
+
+        <!-- Model Performance Section -->
+        <div class="section-divider">
+            <h2>Model Performance</h2>
+            <div class="rule"></div>
+        </div>
+
+        <!-- [Metric] History: Actual vs. Predicted (Out-of-Time), cumulative -->
+        <section class="chart-container-card" id="stockpile-history-card" style="min-height: auto; display: none;">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <h2 id="stockpile-history-title">Stockpile History — Actual vs. Predicted</h2>
+                    <p id="stockpile-history-sub-title">Out-of-time test sample: model predictions vs. what actually happened, for the selected power station</p>
+                </div>
+            </div>
+            <div id="stockpileHistoryChart" style="width: 100%; height: 350px;"></div>
+        </section>
+
+        <!-- Accuracy Metrics Table -->
+        <section class="chart-container-card" id="metrics-card" style="min-height: auto; display: none;">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <h2 id="metrics-main-title">Model Accuracy by Power Station</h2>
+                    <p id="metrics-sub-title">RMSE, MAE, SMAPE, and R&sup2; per power station for Burn and Supply, from the model performance log</p>
+                </div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); cursor: pointer; white-space: nowrap;">
+                    <input type="checkbox" id="oot-toggle" onchange="renderMetricsTable()">
+                    Show Out-of-Time Test Metrics
+                </label>
+            </div>
+            <div style="overflow-x: auto;">
+                <table id="metrics-table" style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead id="metrics-table-head"></thead>
+                    <tbody id="metrics-table-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Burn/Supply vs Weather Correlation Heatmap -->
+        <section class="chart-container-card" id="correlation-card" style="min-height: auto; display: none;">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <h2>Burn &amp; Supply vs. Weather Correlation</h2>
+                    <p id="correlation-sub-title">Pearson correlation between daily Burn/Supply and each weather variable</p>
+                </div>
+            </div>
+            <div id="correlationChart" style="width: 100%; height: 320px;"></div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Eskom Forecaster Dashboard. All data calculated and stored securely in Azure Storage.</p>
+    </footer>
+
+    <script>
+        let allData = null;
+        let allScenarioData = null;  // what-if scenario predictions, shape mirrors allData: {daily: [...], monthly: [...]}, each record additionally carrying scenario_id/label
+        let allMetrics = [];
+        let allOotHistory = [];  // per-date, per-entity OOT actual/predicted Input, Replenishment, and derived Stockpile
+        let allWeather = {};  // date (YYYY-MM-DD) -> weather record (temp_max_c, temp_min_c, rainfall_mm, cloud_cover_pct, humidity_pct, wind_speed_kmh, weather_code, weather_label, uv_index, sunshine_seconds)
+        let chartInitialized = false;
+        let corrChartInitialized = false;
+        let stockpileHistoryChartInitialized = false;
+
+        // Maps the horizon dropdown value to the horizon label used in the metrics table
+        const horizonKeyMap = { daily: 'tactical', monthly: 'strategic' };
+
+        // localStorage fallback cache: if a live fetch fails (e.g. the API pod
+        // is temporarily unavailable), fall back to the last successful
+        // response instead of leaving the dashboard hung, and tell the user
+        // the data may be stale via showStaleBanner().
+        const CACHE_PREFIX = 'stockpile_cache_';
+
+        function cacheStore(key, data) {
+            try {
+                localStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ data, cachedAt: Date.now() }));
+            } catch (e) {
+                console.warn(`Failed to cache ${key}:`, e);
+            }
+        }
+
+        function cacheLoad(key) {
+            try {
+                const raw = localStorage.getItem(CACHE_PREFIX + key);
+                if (!raw) return null;
+                return JSON.parse(raw);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function showStaleBanner(cachedAt) {
+            const banner = document.getElementById('stale-data-banner');
+            if (!banner) return;
+            const when = new Date(cachedAt).toLocaleString();
+            banner.innerText = `Showing cached data from ${when} — live refresh failed. The API may be temporarily unavailable.`;
+            banner.style.display = 'block';
+        }
+
+        // Cosmetic display-only renames: backend/API field names (Input, Replenishment,
+        // entity_id) are unchanged; only the labels shown to the user are renamed.
+        const metricDisplayNames = { Input: 'Burn', Replenishment: 'Supply', Stockpile: 'Stockpile' };
+
+        // Fixed forecast-line color: burnt orange, CVD/contrast validated
+        // against the Eskom blue palette used elsewhere on the dashboard
+        // (e.g. the weather blue, #1890d7). The station's identity is carried
+        // by the legend and subtitle, not the hue.
+        const forecastLineColor = '#e8590c';
+
+        // Format numbers for display
+        function formatNumber(num, decimals = 2) {
+            if (num === null || num === undefined || Number.isNaN(num)) {
+                return '—';
+            }
+            return new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            }).format(num);
+        }
+
+        // Fetch data from the API. Falls back to the last successful response
+        // cached in localStorage if the live call fails (e.g. the API pod is
+        // temporarily unavailable), so the dashboard shows something instead
+        // of hanging on the loader forever.
+        async function fetchForecastData() {
+            try {
+                const response = await fetch('/api/forecast-data');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const json = await response.json();
+
+                // Validate data presence
+                if ((!json.daily || json.daily.length === 0) && (!json.monthly || json.monthly.length === 0)) {
+                    showError("No predictions found in Gold storage. Run the forecasting pipeline first!");
+                    return;
+                }
+
+                allData = json;
+                cacheStore('forecastData', json);
+                hideLoader();
+                renderDashboard(true); // Rebuild entities on load
+                renderMetricsTable();  // Refresh row highlight now that the entity selector is populated
+                renderCorrelationHeatmap();
+                renderStockpileHistoryChart(); // Now that the entity selector is populated, show its OOT history
+                fetchWeatherData();    // Now that the entity selector is populated, fetch that station's weather
+            } catch (error) {
+                console.error("Failed to fetch forecast data:", error);
+                const cached = cacheLoad('forecastData');
+                if (cached) {
+                    allData = cached.data;
+                    hideLoader();
+                    showStaleBanner(cached.cachedAt);
+                    renderDashboard(true);
+                    renderMetricsTable();
+                    renderCorrelationHeatmap();
+                    renderStockpileHistoryChart();
+                    fetchWeatherData();
+                } else {
+                    showError("Unable to load forecast data. Ensure the API service is running.");
+                }
+            }
+        }
+
+        // Fetch what-if scenario predictions from the API. Tolerant of
+        // failure/absence (e.g. no scenario run has produced this data yet)
+        // -- the dashboard still works with just "Actual".
+        async function fetchScenarioData() {
+            try {
+                const response = await fetch('/api/scenario-data');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                allScenarioData = await response.json();
+                cacheStore('scenarioData', allScenarioData);
+            } catch (error) {
+                console.error("Failed to fetch scenario data:", error);
+                const cached = cacheLoad('scenarioData');
+                allScenarioData = cached ? cached.data : null;
+            }
+        }
+
+        // Fetch per-entity accuracy metrics from the API
+        async function fetchForecastMetrics() {
+            try {
+                const response = await fetch('/api/forecast-metrics');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                allMetrics = await response.json();
+                cacheStore('forecastMetrics', allMetrics);
+                renderMetricsTable();
+            } catch (error) {
+                console.error("Failed to fetch forecast metrics:", error);
+                const cached = cacheLoad('forecastMetrics');
+                allMetrics = cached ? cached.data : [];
+                renderMetricsTable();
+            }
+        }
+
+        // Fetch per-date, per-entity out-of-time actual-vs-predicted history
+        // (Input, Replenishment, and derived Stockpile) from the API. Backs
+        // the Stockpile History chart. May legitimately be empty if no
+        // training run has produced this data yet.
+        async function fetchOotHistory() {
+            try {
+                const response = await fetch('/api/oot-history');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                allOotHistory = await response.json();
+                cacheStore('ootHistory', allOotHistory);
+                renderStockpileHistoryChart();
+            } catch (error) {
+                console.error("Failed to fetch OOT history:", error);
+                const cached = cacheLoad('ootHistory');
+                allOotHistory = cached ? cached.data : [];
+                renderStockpileHistoryChart();
+            }
+        }
+
+        // Per-target metric columns for the Model Accuracy table. Stockpile is a
+        // signed, cumulative quantity that legitimately crosses zero, which drives
+        // SMAPE to its 200% ceiling on every sign-mismatch row regardless of real
+        // accuracy -- so Stockpile shows R² in that column's place instead. NRMSE
+        // (RMSE normalized by mean |actual|) is shown for every target as a
+        // scale-free companion to RMSE/MAE that doesn't share SMAPE's zero-crossing
+        // issue.
+        function metricColumnsForTarget(target) {
+            if (target === 'Stockpile') {
+                return { cols: ['rmse', 'mae', 'r2', 'nrmse'], headers: ['RMSE', 'MAE', 'R²', 'NRMSE (%)'] };
+            }
+            return { cols: ['rmse', 'mae', 'smape', 'nrmse'], headers: ['RMSE', 'MAE', 'SMAPE (%)', 'NRMSE (%)'] };
+        }
+
+        // Render the model-accuracy cross-table: one row per power station, with
+        // RMSE, MAE, SMAPE (R² for Stockpile), and NRMSE for Burn (Input), Supply
+        // (Replenishment), and Stockpile side by side, filtered by the selected
+        // horizon and the OOT toggle. Sourced from the model performance log in
+        // the metrics container.
+        function renderMetricsTable() {
+            const metricsCard = document.getElementById('metrics-card');
+            const horizon = document.getElementById('horizon-select').value;
+            const showOot = document.getElementById('oot-toggle').checked;
+            const horizonKey = showOot ? `${horizonKeyMap[horizon]}_oot` : horizonKeyMap[horizon];
+
+            const crossTargets = ['Input', 'Replenishment', 'Stockpile'];
+            const rows = allMetrics.filter(m => m.horizon === horizonKey && crossTargets.includes(m.target));
+
+            const horizonLabel = horizon === 'daily' ? 'Tactical Daily' : 'Strategic Monthly';
+
+            if (rows.length === 0) {
+                if (showOot) {
+                    // Keep the card visible with an explanatory message rather than hiding it,
+                    // since the OOT sample is legitimately empty until bronze data extends
+                    // past the training cutoff (2024-12-31).
+                    metricsCard.style.display = 'flex';
+                    document.getElementById('metrics-sub-title').innerText =
+                        `No out-of-time test data available yet for ${horizonLabel} (no data after the 2024-12-31 training cutoff).`;
+                    document.getElementById('metrics-table-head').innerHTML = '';
+                    document.getElementById('metrics-table-body').innerHTML = '';
+                } else {
+                    metricsCard.style.display = 'none';
+                }
+                return;
+            }
+            metricsCard.style.display = 'flex';
+
+            const sampleLabel = showOot ? 'Out-of-Time test sample' : 'last training run';
+            document.getElementById('metrics-sub-title').innerText =
+                `${horizonLabel} — RMSE, MAE, SMAPE (R² for Stockpile), and NRMSE per power station for Burn, Supply, and Stockpile, from the ${sampleLabel}`;
+
+            // Pivot: entity_id -> target -> metrics record
+            const byEntity = {};
+            rows.forEach(m => {
+                if (!byEntity[m.entity_id]) byEntity[m.entity_id] = {};
+                byEntity[m.entity_id][m.target] = m;
+            });
+            const entities = Object.keys(byEntity).sort((a, b) => a.localeCompare(b));
+
+            const thStyle = 'text-align:left; padding:0.6rem; border-bottom:1px solid var(--card-border); color:var(--text-secondary); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;';
+            const groupDivider = 'border-left:1px solid var(--card-border);';
+            const columnsByTarget = crossTargets.map(t => metricColumnsForTarget(t));
+
+            const head = document.getElementById('metrics-table-head');
+            head.innerHTML = `
+                <tr>
+                    <th style="${thStyle}" rowspan="2">Power Station</th>
+                    ${crossTargets.map((t, ti) =>
+                        `<th style="${thStyle} ${groupDivider} text-align:center;" colspan="${columnsByTarget[ti].headers.length}">${metricDisplayNames[t]}</th>`
+                    ).join('')}
+                </tr>
+                <tr>
+                    ${columnsByTarget.map(({ headers }) =>
+                        headers.map((h, hi) =>
+                            `<th style="${thStyle} ${hi === 0 ? groupDivider : ''}">${h}</th>`
+                        ).join('')
+                    ).join('')}
+                </tr>`;
+
+            const tdStyle = 'padding:0.6rem; border-bottom:1px solid var(--card-border);';
+            const formatCell = (val) =>
+                (val === null || val === undefined || Number.isNaN(val)) ? '—' : formatNumber(val, 2);
+
+            // Highlight the row of the power station currently selected in the header
+            const selectedEntity = document.getElementById('entity-select').value;
+
+            const body = document.getElementById('metrics-table-body');
+            body.innerHTML = entities.map(entity => {
+                const isSelected = entity === selectedEntity;
+                const rowStyle = isSelected ? ' style="background: rgba(0, 56, 150, 0.06); font-weight: 600;"' : '';
+                const metricCells = crossTargets.map((target, ti) => {
+                    const record = byEntity[entity][target];
+                    const avgForTarget = computeAverageForHorizon(horizon, entity, target);
+                    return columnsByTarget[ti].cols.map((col, i) => {
+                        const val = record ? record[col] : null;
+                        const dotStyle = metricCellDotStyle(col, val, avgForTarget);
+                        // nrmse is stored as a raw fraction; displayed as a percentage
+                        // (thresholding in metricCellDotStyle already accounts for this).
+                        const displayVal = (col === 'nrmse' && val !== null && val !== undefined) ? 100 * val : val;
+                        return `<td style="${tdStyle} ${i === 0 ? groupDivider : ''}">${dotStyle}${formatCell(displayVal)}</td>`;
+                    }).join('');
+                }).join('');
+                return `<tr${rowStyle}><td style="${tdStyle}">${entityDisplayName(entity)}</td>${metricCells}</tr>`;
+            }).join('');
+        }
+
+        // Traffic-light colors for the metrics table: green/orange/red dots
+        // indicating whether a metric value is in a good/fair/poor range.
+        // - rmse/mae: converted to a % of that station's average forecast value
+        //   for the same target, then thresholded the same as SMAPE
+        //   (green <35%, orange 35-40%, red >40%), since raw RMSE/MAE are in
+        //   tons and not comparable across power stations of different scale.
+        // - smape: already a percentage, thresholded directly.
+        // - nrmse: RMSE / mean(|actual|), already scale-free -- thresholded as a
+        //   fraction using the same 0.35/0.40 cut points as the SMAPE percentage.
+        // - r2: higher is better (green >=0.8, orange 0.5-0.8, red <0.5). Shown in
+        //   place of SMAPE for Stockpile, where SMAPE isn't meaningful (see
+        //   compute_per_entity_metrics's docstring for why).
+        function metricThresholdColor(pct) {
+            if (pct === null || pct === undefined || Number.isNaN(pct)) return null;
+            if (pct < 35) return '#16a34a';
+            if (pct <= 40) return '#f59e0b';
+            return '#dc2626';
+        }
+        function metricCellDotStyle(col, val, avgForTarget) {
+            if (val === null || val === undefined || Number.isNaN(val)) return '';
+            let color;
+            if (col === 'smape') {
+                color = metricThresholdColor(val);
+            } else if (col === 'nrmse') {
+                color = metricThresholdColor(100 * val);
+            } else if (col === 'r2') {
+                color = val >= 0.8 ? '#16a34a' : (val >= 0.5 ? '#f59e0b' : '#dc2626');
+            } else if (col === 'rmse' || col === 'mae') {
+                if (!avgForTarget) return '';
+                color = metricThresholdColor(100 * val / Math.abs(avgForTarget));
+            }
+            if (!color) return '';
+            return `<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${color}; margin-right:6px;"></span>`;
+        }
+
+        // Renders the [Metric] History chart: actual vs. predicted CUMULATIVE
+        // Burn/Supply/Stockpile for the out-of-time test sample, for the
+        // currently selected power station, horizon, AND metric (Input/
+        // Replenishment/Stockpile, from the same dropdown that drives the main
+        // forecast chart) -- all three are shown as running totals for
+        // consistency, since Stockpile is inherently cumulative and showing
+        // Burn/Supply as raw daily deltas alongside it would compare
+        // differently-shaped quantities. Hidden if no OOT history is available
+        // yet (e.g. no training run has produced it), or if the synthetic
+        // Total station is selected (Total has no OOT record).
+        function renderStockpileHistoryChart() {
+            const card = document.getElementById('stockpile-history-card');
+            const horizon = document.getElementById('horizon-select').value;
+            const horizonKey = horizonKeyMap[horizon];
+            const selectedEntity = document.getElementById('entity-select').value;
+            const metric = document.getElementById('metric-select').value; // 'Input' | 'Replenishment' | 'Stockpile'
+
+            if (!allOotHistory || allOotHistory.length === 0 || !selectedEntity || selectedEntity === TOTAL_ENTITY_ID) {
+                card.style.display = 'none';
+                return;
+            }
+
+            const rows = allOotHistory
+                .filter(r => r.horizon === horizonKey && r.entity_id === selectedEntity)
+                .sort((a, b) => a.event_date < b.event_date ? -1 : 1);
+
+            if (rows.length === 0) {
+                card.style.display = 'none';
+                return;
+            }
+
+            card.style.display = 'flex';
+            const horizonLabel = horizon === 'daily' ? 'Tactical Daily' : 'Strategic Monthly';
+            const metricLabel = metricDisplayNames[metric] || metric;
+            document.getElementById('stockpile-history-title').innerText =
+                `${metricLabel} History — Actual vs. Predicted`;
+            document.getElementById('stockpile-history-sub-title').innerText =
+                `${horizonLabel} out-of-time test sample for ${entityDisplayName(selectedEntity)}: cumulative ${metricLabel.toLowerCase()} predictions vs. what actually happened, over ${rows.length} held-out ${horizon === 'daily' ? 'days' : 'months'}`;
+
+            const dates = rows.map(r => r.event_date);
+            // Stockpile is already a cumulative running total server-side (see
+            // training.cumulative_stockpile()); Input/Replenishment are raw daily
+            // values here, so cumsum them client-side for a consistent "running
+            // total" comparison across all three metrics.
+            let actual, predicted;
+            if (metric === 'Stockpile') {
+                actual = rows.map(r => r.Stockpile_actual);
+                predicted = rows.map(r => r.Stockpile_predicted);
+            } else {
+                let cumActual = 0, cumPred = 0;
+                actual = rows.map(r => (cumActual += r[`${metric}_actual`]));
+                predicted = rows.map(r => (cumPred += r[`${metric}_predicted`]));
+            }
+
+            const traces = [
+                {
+                    type: 'scatter', mode: 'lines+markers', name: 'Actual',
+                    x: dates, y: actual,
+                    line: { color: '#003896', width: 2.5 },
+                    marker: { color: '#003896', size: 4 },
+                },
+                {
+                    type: 'scatter', mode: 'lines+markers', name: 'Predicted',
+                    x: dates, y: predicted,
+                    line: { color: forecastLineColor, width: 2.5, dash: 'dot' },
+                    marker: { color: forecastLineColor, size: 4 },
+                },
+            ];
+
+            const layout = {
+                margin: { l: 55, r: 30, t: 10, b: 40 },
+                paper_bgcolor: 'transparent',
+                plot_bgcolor: 'transparent',
+                font: { family: 'Roboto', size: 11, color: '#475569' },
+                hovermode: 'x unified',
+                hoverlabel: {
+                    bgcolor: 'rgba(15, 23, 42, 0.95)',
+                    bordercolor: 'rgba(255, 255, 255, 0.1)',
+                    font: { family: 'Roboto', size: 12, color: '#f8fafc' }
+                },
+                legend: { orientation: 'h', y: 1.15, x: 0, font: { family: 'Roboto', size: 11, color: '#475569' } },
+                xaxis: { gridcolor: 'rgba(0, 0, 0, 0.04)', tickfont: { family: 'Roboto', size: 11, color: '#475569' } },
+                yaxis: { gridcolor: 'rgba(0, 0, 0, 0.04)', tickfont: { family: 'Roboto', size: 11, color: '#475569' }, zeroline: false }
+            };
+
+            const plotConfig = { responsive: true, displaylogo: false };
+            if (stockpileHistoryChartInitialized) {
+                Plotly.react('stockpileHistoryChart', traces, layout, plotConfig);
+            } else {
+                Plotly.newPlot('stockpileHistoryChart', traces, layout, plotConfig);
+                stockpileHistoryChartInitialized = true;
+            }
+        }
+
+        function showLoader(message) {
+            const loader = document.getElementById('loader');
+            const loaderText = document.getElementById('loader-status');
+            loaderText.innerText = message;
+            loader.style.opacity = '1';
+            loader.style.pointerEvents = 'all';
+        }
+
+        function hideLoader() {
+            const loader = document.getElementById('loader');
+            loader.style.opacity = '0';
+            loader.style.pointerEvents = 'none';
+        }
+
+        function showError(msg) {
+            const loader = document.getElementById('loader');
+            const spinner = document.querySelector('.spinner');
+            const loaderText = document.getElementById('loader-status');
+            if (spinner) spinner.style.display = 'none';
+            loaderText.innerHTML = `<span style="color: #ef4444; font-size: 1.1rem; text-align: center;">&#9888;<br>${msg}</span>`;
+            loader.style.opacity = '1';
+            loader.style.pointerEvents = 'all';
+        }
+
+        // Event listener for dropdown changes. The metrics cross-table shows all
+        // targets at once, but re-renders on selection changes so the selected
+        // power station's row highlight stays in sync. Weather is also
+        // re-fetched, since it's specific to the selected station's location.
+        function onSelectionChange() {
+            if (allData) {
+                renderDashboard(false);
+            }
+            renderMetricsTable();
+            renderCorrelationHeatmap();
+            renderStockpileHistoryChart();
+            fetchWeatherData();
+        }
+
+        function onHorizonChange() {
+            if (allData) {
+                renderDashboard(true); // Rebuild entities on horizon switch
+            }
+            renderMetricsTable();
+            renderCorrelationHeatmap();
+            renderStockpileHistoryChart();
+            fetchWeatherData();
+        }
+
+        // Computes the mean of `metric` across all records for `entity` in the
+        // given horizon's own dataset (allData.daily or allData.monthly),
+        // independent of which horizon is currently selected in the dropdown.
+        // Backs the Average Forecast card's actual Daily/Monthly values.
+        function computeAverageForHorizon(horizonKey, entity, metric, divisor = 1) {
+            const records = (allData && allData[horizonKey]) || [];
+            let sum = 0;
+            let count = 0;
+            records.forEach(r => {
+                if (r.entity_id !== entity) return;
+                const val = (r[metric] !== undefined ? r[metric] : 0) / divisor;
+                sum += val;
+                count++;
+            });
+            return count > 0 ? sum / count : null;
+        }
+
+        // Sentinel entity_id for the synthetic "Total" power station option.
+        const TOTAL_ENTITY_ID = '__TOTAL__';
+
+        // Display name for any entity_id, including the synthetic Total option.
+        function entityDisplayName(entityId) {
+            return entityId === TOTAL_ENTITY_ID ? 'Total' : String(entityId).replace('_', ' ');
+        }
+        // Excluded from the Total sum (per-station standard-daily-burn division
+        // also excludes this entity -- see computeStandardDailyBurn).
+        const TOTAL_EXCLUDED_ENTITIES = new Set(['Kusile_Limestone']);
+
+        // Builds synthetic "Total" records by summing Input/Replenishment/Stockpile
+        // across all real entities (excluding TOTAL_EXCLUDED_ENTITIES) for each
+        // shared date, so the Total option can flow through the same per-date,
+        // per-entity rendering pipeline as any real power station.
+        function buildTotalRecords(records) {
+            const byDate = {};
+            records.forEach(r => {
+                if (!r.entity_id || TOTAL_EXCLUDED_ENTITIES.has(r.entity_id)) return;
+                if (!byDate[r.event_date]) {
+                    byDate[r.event_date] = { entity_id: TOTAL_ENTITY_ID, event_date: r.event_date, Input: 0, Replenishment: 0, Stockpile: 0 };
+                }
+                const agg = byDate[r.event_date];
+                agg.Input += r.Input || 0;
+                agg.Replenishment += r.Replenishment || 0;
+                agg.Stockpile += r.Stockpile || 0;
+            });
+            return Object.values(byDate);
+        }
+
+        // Standard daily burn per entity_id: that station's average daily Input
+        // (burn) across its entire history in the daily-horizon dataset. Used as
+        // the divisor for the Stockpile "Days of Supply" unit toggle. Memoized
+        // per allData load since it does not depend on the current selection.
+        let standardDailyBurnCache = null;
+        function computeStandardDailyBurn(entity) {
+            if (!standardDailyBurnCache) {
+                standardDailyBurnCache = {};
+                const records = (allData && allData.daily) || [];
+                const sums = {};
+                const counts = {};
+                records.forEach(r => {
+                    if (!r.entity_id) return;
+                    sums[r.entity_id] = (sums[r.entity_id] || 0) + (r.Input || 0);
+                    counts[r.entity_id] = (counts[r.entity_id] || 0) + 1;
+                });
+                Object.keys(sums).forEach(e => {
+                    standardDailyBurnCache[e] = counts[e] > 0 ? sums[e] / counts[e] : null;
+                });
+                // Total's standard daily burn: sum of each included station's own
+                // standard daily burn, consistent with how Total's other values
+                // are built (see buildTotalRecords).
+                standardDailyBurnCache[TOTAL_ENTITY_ID] = Object.keys(standardDailyBurnCache)
+                    .filter(e => !TOTAL_EXCLUDED_ENTITIES.has(e))
+                    .reduce((sum, e) => sum + (standardDailyBurnCache[e] || 0), 0);
+            }
+            return standardDailyBurnCache[entity] || null;
+        }
+
+        // Returns the record array to chart for the current horizon, taking
+        // the scenario selector into account. "actual" is the unchanged
+        // baseline path (zero risk to existing behavior); any other
+        // scenario_id filters the what-if scenario dataset down to that
+        // scenario's rows for the same horizon.
+        function getActiveRecords(horizon) {
+            const scenario = document.getElementById('scenario-select').value;
+            if (scenario === 'actual') {
+                return allData[horizon];
+            }
+            const scenarioRecords = (allScenarioData && allScenarioData[horizon]) || [];
+            return scenarioRecords.filter(r => r.scenario_id === scenario);
+        }
+
+        // Extract and aggregate stats, then rebuild the chart
+        function renderDashboard(rebuildEntities = false) {
+            const horizon = document.getElementById('horizon-select').value;
+            const metric = document.getElementById('metric-select').value;
+
+            const baseRecords = getActiveRecords(horizon);
+            if (!baseRecords || baseRecords.length === 0) {
+                showError(`No data available for the selected ${horizon} horizon.`);
+                return;
+            }
+            const rawRecords = baseRecords.concat(buildTotalRecords(baseRecords));
+
+            // Extract all unique entities for this horizon
+            const allUniqueEntitiesSet = new Set();
+            baseRecords.forEach(r => {
+                if (r.entity_id) allUniqueEntitiesSet.add(r.entity_id);
+            });
+            const allUniqueEntities = Array.from(allUniqueEntitiesSet).sort();
+            allUniqueEntities.push(TOTAL_ENTITY_ID);
+
+            const entitySelect = document.getElementById('entity-select');
+
+            // Build the entity selector options if requested or if empty,
+            // keeping the current choice when that station also exists in the
+            // newly selected horizon.
+            if (rebuildEntities || entitySelect.options.length === 0) {
+                const previous = entitySelect.value;
+                entitySelect.innerHTML = allUniqueEntities.map(entity =>
+                    `<option value="${entity}">${entityDisplayName(entity)}</option>`
+                ).join('');
+                if (allUniqueEntities.includes(previous)) {
+                    entitySelect.value = previous;
+                }
+            }
+
+            // Single selection: exactly one power station is active at a time
+            const selectedEntity = entitySelect.value;
+            const activeEntities = new Set(selectedEntity ? [selectedEntity] : []);
+
+            // Days-of-Supply unit toggle: only meaningful for the Stockpile metric,
+            // dividing each Stockpile data point by the selected station's standard
+            // daily burn (all-time average daily Input). Hidden for other metrics.
+            const stockpileUnitGroup = document.getElementById('stockpile-unit-group');
+            const stockpileUnitToggle = document.getElementById('stockpile-unit-toggle');
+            stockpileUnitGroup.style.display = metric === 'Stockpile' ? 'flex' : 'none';
+            const useDaysOfSupply = metric === 'Stockpile' && stockpileUnitToggle.value === 'days';
+            const standardDailyBurn = useDaysOfSupply ? computeStandardDailyBurn(selectedEntity) : null;
+            const divisor = (useDaysOfSupply && standardDailyBurn) ? standardDailyBurn : 1;
+
+            // Group by date to find unique time intervals for SELECTED entities
+            const datesMap = {};
+            const entitiesMap = {};
+            let sumVal = 0;
+            let maxVal = -Infinity;
+            let countVal = 0;
+
+            rawRecords.forEach(r => {
+                const date = r.event_date;
+                const entity = r.entity_id;
+
+                if (!activeEntities.has(entity)) {
+                    return;
+                }
+
+                const val = (r[metric] !== undefined ? r[metric] : 0) / divisor;
+
+                sumVal += val;
+                countVal++;
+                if (val > maxVal) maxVal = val;
+
+                // Dates set
+                datesMap[date] = true;
+
+                // Entity mapping
+                if (!entitiesMap[entity]) {
+                    entitiesMap[entity] = {};
+                }
+                entitiesMap[entity][date] = val;
+            });
+
+            const sortedDates = Object.keys(datesMap).sort();
+            const uniqueEntities = Object.keys(entitiesMap).sort();
+
+            // KPI card titles show the active metric alongside the stat name,
+            // so the bracket reflects whichever of Burn/Supply/Stockpile is selected.
+            const kpiMetricLabel = document.getElementById('metric-select').selectedOptions[0].text;
+            document.getElementById('kpi-title-avg').innerText = `(Mean ${kpiMetricLabel})`;
+            document.getElementById('kpi-title-peak').innerText = `(Max ${kpiMetricLabel})`;
+            document.getElementById('kpi-title-total').innerText = `(Sum ${kpiMetricLabel})`;
+            document.getElementById('kpi-title-horizon').innerText = `(Count ${kpiMetricLabel})`;
+
+            // Set KPI values
+            if (countVal > 0) {
+                document.getElementById('kpi-peak').innerText = formatNumber(maxVal, 0);
+                document.getElementById('kpi-total').innerText = formatNumber(sumVal, 0);
+                document.getElementById('kpi-horizon').innerText = `${sortedDates.length} ${horizon === 'daily' ? 'Days' : 'Months'}`;
+            } else {
+                document.getElementById('kpi-peak').innerText = '0';
+                document.getElementById('kpi-total').innerText = '0';
+                document.getElementById('kpi-horizon').innerText = `0 ${horizon === 'daily' ? 'Days' : 'Months'}`;
+            }
+
+            // Average Forecast card shows the actual daily-horizon and
+            // monthly-horizon averages side by side, independent of which
+            // horizon is selected in the dropdown, but respecting the same
+            // Days-of-Supply divisor as Peak/Total/Horizon above so all four
+            // KPI cards stay in the same unit.
+            const dailyAvg = computeAverageForHorizon('daily', selectedEntity, metric, divisor);
+            const monthlyAvg = computeAverageForHorizon('monthly', selectedEntity, metric, divisor);
+            document.getElementById('kpi-avg-daily').innerText = dailyAvg !== null ? formatNumber(dailyAvg, 0) : '0';
+            document.getElementById('kpi-avg-monthly').innerText = monthlyAvg !== null ? formatNumber(monthlyAvg, 0) : '0';
+
+            // Update Titles
+            const horizonLabel = horizon === 'daily' ? 'Tactical Daily' : 'Strategic Monthly';
+            const metricLabel = useDaysOfSupply ? 'Days of Supply' : (metricDisplayNames[metric] || metric);
+            document.getElementById('chart-main-title').innerText = `${horizonLabel} ${metricLabel} Forecast`;
+
+            if (activeEntities.size === 0) {
+                document.getElementById('chart-sub-title').innerText = `No power station selected. Choose one from the dropdown.`;
+            } else {
+                document.getElementById('chart-sub-title').innerText = `Displaying predictions for ${entityDisplayName(selectedEntity)} from ${sortedDates[0]} to ${sortedDates[sortedDates.length - 1]}`;
+            }
+
+            // Build Plotly traces
+            const traces = [];
+
+            // 1. Forecast line for the selected power station
+            uniqueEntities.forEach((entity) => {
+                const dataPoints = sortedDates.map(date => {
+                    const val = entitiesMap[entity][date];
+                    return val !== undefined ? val : null;
+                });
+
+                traces.push({
+                    type: 'scatter',
+                    mode: 'lines+markers',
+                    name: entityDisplayName(entity),
+                    x: sortedDates,
+                    y: dataPoints,
+                    line: { color: forecastLineColor, width: 2.5, shape: 'spline', smoothing: 0.3 },
+                    marker: { color: forecastLineColor, size: 4 },
+                    hovertemplate: '%{y:,.2f}<extra>' + entityDisplayName(entity) + '</extra>'
+                });
+            });
+
+            // 2. Actual (baseline) overlay -- only when a non-"actual" scenario is
+            // selected, so the user can compare the what-if line against the real
+            // baseline forecast for the same horizon/entity/metric. Sourced from
+            // allData directly (not getActiveRecords), since the baseline must
+            // stay the true "actual" series regardless of the scenario dropdown.
+            const activeScenario = document.getElementById('scenario-select').value;
+            if (activeScenario !== 'actual') {
+                const baselineRecords = (allData[horizon] || []).concat(
+                    buildTotalRecords(allData[horizon] || [])
+                );
+                const baselineEntitiesMap = {};
+                baselineRecords.forEach(r => {
+                    if (!activeEntities.has(r.entity_id)) return;
+                    const val = (r[metric] !== undefined ? r[metric] : 0) / divisor;
+                    if (!baselineEntitiesMap[r.entity_id]) baselineEntitiesMap[r.entity_id] = {};
+                    baselineEntitiesMap[r.entity_id][r.event_date] = val;
+                });
+
+                uniqueEntities.forEach((entity) => {
+                    const baselineByDate = baselineEntitiesMap[entity];
+                    if (!baselineByDate) return;
+                    const dataPoints = sortedDates.map(date => {
+                        const val = baselineByDate[date];
+                        return val !== undefined ? val : null;
+                    });
+
+                    traces.push({
+                        type: 'scatter',
+                        mode: 'lines',
+                        name: `${entityDisplayName(entity)} (Actual)`,
+                        x: sortedDates,
+                        y: dataPoints,
+                        line: { color: '#94a3b8', width: 2, dash: 'dash', shape: 'spline', smoothing: 0.3 },
+                        hovertemplate: '%{y:,.2f}<extra>' + entityDisplayName(entity) + ' (Actual)</extra>'
+                    });
+                });
+            }
+
+            // Rebuild the chart
+            const layout = {
+                margin: { l: 55, r: 30, t: 10, b: 40 },
+                paper_bgcolor: 'transparent',
+                plot_bgcolor: 'transparent',
+                font: { family: 'Roboto', size: 11, color: '#475569' },
+                hovermode: 'x unified',
+                hoverlabel: {
+                    bgcolor: 'rgba(15, 23, 42, 0.95)',
+                    bordercolor: 'rgba(255, 255, 255, 0.1)',
+                    font: { family: 'Roboto', size: 12, color: '#f8fafc' }
+                },
+                legend: {
+                    orientation: 'h',
+                    y: 1.12,
+                    x: 0,
+                    font: { family: 'Roboto', size: 11, color: '#475569' }
+                },
+                xaxis: {
+                    gridcolor: 'rgba(0, 0, 0, 0.04)',
+                    tickfont: { family: 'Roboto', size: 11, color: '#475569' },
+                    nticks: horizon === 'daily' ? 15 : 12
+                },
+                yaxis: {
+                    gridcolor: 'rgba(0, 0, 0, 0.04)',
+                    tickfont: { family: 'Roboto', size: 11, color: '#475569' },
+                    zeroline: false
+                }
+            };
+
+            const plotConfig = { responsive: true, displaylogo: false };
+
+            if (chartInitialized) {
+                Plotly.react('forecastChart', traces, layout, plotConfig);
+            } else {
+                Plotly.newPlot('forecastChart', traces, layout, plotConfig);
+                chartInitialized = true;
+            }
+        }
+
+        // Fetch the daily weather time series from the API, for the
+        // currently selected power station's real location. Backs the
+        // Weather Summary panel and the Burn/Supply-vs-weather correlation
+        // heatmap; it is not plotted on the main forecast chart. Re-fetched
+        // whenever the power station selection changes (see onSelectionChange).
+        async function fetchWeatherData() {
+            try {
+                const selectedEntity = document.getElementById('entity-select').value;
+                const url = selectedEntity
+                    ? `/api/weather-data?entity_id=${encodeURIComponent(selectedEntity)}`
+                    : '/api/weather-data';
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const rows = await response.json();
+                allWeather = {};
+                rows.forEach(r => { allWeather[r.date] = r; });
+                cacheStore(`weatherData_${selectedEntity || 'default'}`, rows);
+                renderWeatherSummary(selectedEntity);
+                if (allData) {
+                    renderCorrelationHeatmap();
+                }
+            } catch (error) {
+                console.error("Failed to fetch weather data:", error);
+                const selectedEntity = document.getElementById('entity-select').value;
+                const cached = cacheLoad(`weatherData_${selectedEntity || 'default'}`);
+                allWeather = {};
+                if (cached) {
+                    cached.data.forEach(r => { allWeather[r.date] = r; });
+                }
+                renderWeatherSummary(selectedEntity);
+                if (allData) {
+                    renderCorrelationHeatmap();
+                }
+            }
+        }
+
+        // Render today's (or the most recent available) weather as a row of
+        // summary tiles: condition, highs/lows, humidity, cloud cover, wind,
+        // UV index, and sunshine. `entityId` is the power station these
+        // readings belong to (its real location), shown in the panel subtitle.
+        function renderWeatherSummary(entityId) {
+            const card = document.getElementById('weather-summary-card');
+            const tilesContainer = document.getElementById('weather-summary-tiles');
+            const dates = Object.keys(allWeather).sort();
+            if (dates.length === 0) {
+                card.style.display = 'none';
+                return;
+            }
+
+            const todayIso = new Date().toISOString().slice(0, 10);
+            const latestDate = dates.includes(todayIso) ? todayIso : dates[dates.length - 1];
+            const w = allWeather[latestDate];
+
+            card.style.display = 'flex';
+            document.getElementById('weather-summary-date').innerText =
+                latestDate === todayIso ? 'Today' : latestDate;
+            document.getElementById('weather-summary-station').innerText =
+                entityId ? entityDisplayName(entityId) : 'the selected power station';
+
+            const sunshineHours = w.sunshine_seconds !== undefined && w.sunshine_seconds !== null
+                ? w.sunshine_seconds / 3600
+                : null;
+
+            const tiles = [
+                ['Condition', w.weather_label || '—', ''],
+                ['High / Low', `${formatNumber(w.temp_max_c, 1)}&deg; / ${formatNumber(w.temp_min_c, 1)}&deg;`, 'C'],
+                ['Rainfall', formatNumber(w.rainfall_mm, 1), 'mm'],
+                ['Cloud Cover', formatNumber(w.cloud_cover_pct, 0), '%'],
+                ['Humidity', formatNumber(w.humidity_pct, 0), '%'],
+                ['Wind (max)', formatNumber(w.wind_speed_kmh, 1), 'km/h'],
+                ['UV Index', formatNumber(w.uv_index, 1), ''],
+                ['Sunshine', sunshineHours !== null ? formatNumber(sunshineHours, 1) : '—', 'hrs'],
+            ];
+
+            tilesContainer.innerHTML = tiles.map(([label, value, unit]) => `
+                <div class="weather-tile">
+                    <div class="weather-tile-label">${label}</div>
+                    <div class="weather-tile-value">${value}${unit ? ` <span class="weather-tile-unit">${unit}</span>` : ''}</div>
+                </div>
+            `).join('');
+        }
+
+        // Pearson correlation coefficient between two equal-length numeric
+        // arrays, pairwise-ignoring any index where either value is missing.
+        function pearsonCorrelation(xs, ys) {
+            const pairs = xs.map((x, i) => [x, ys[i]])
+                .filter(([x, y]) => x !== null && x !== undefined && !Number.isNaN(x) &&
+                                     y !== null && y !== undefined && !Number.isNaN(y));
+            const n = pairs.length;
+            if (n < 2) return null;
+
+            const meanX = pairs.reduce((s, [x]) => s + x, 0) / n;
+            const meanY = pairs.reduce((s, [, y]) => s + y, 0) / n;
+
+            let cov = 0, varX = 0, varY = 0;
+            pairs.forEach(([x, y]) => {
+                cov += (x - meanX) * (y - meanY);
+                varX += (x - meanX) ** 2;
+                varY += (y - meanY) ** 2;
+            });
+
+            if (varX === 0 || varY === 0) return null;
+            return cov / Math.sqrt(varX * varY);
+        }
+
+        // Render a Burn/Supply x weather-variable correlation heatmap for the
+        // currently selected power station, over the daily horizon (the only
+        // horizon where predictions and weather share a daily grain).
+        function renderCorrelationHeatmap() {
+            const card = document.getElementById('correlation-card');
+            const horizon = document.getElementById('horizon-select').value;
+            const entitySelect = document.getElementById('entity-select');
+            const selectedEntity = entitySelect.value;
+
+            if (horizon !== 'daily' || !allData || !selectedEntity || Object.keys(allWeather).length === 0) {
+                card.style.display = 'none';
+                return;
+            }
+
+            const rawRecords = (allData.daily || []).filter(r => r.entity_id === selectedEntity);
+            if (rawRecords.length === 0) {
+                card.style.display = 'none';
+                return;
+            }
+
+            const weatherVars = [
+                ['temp_max_c', 'Temp Max'],
+                ['temp_min_c', 'Temp Min'],
+                ['rainfall_mm', 'Rainfall'],
+                ['cloud_cover_pct', 'Cloud Cover'],
+                ['humidity_pct', 'Humidity'],
+                ['wind_speed_kmh', 'Wind Speed'],
+                ['uv_index', 'UV Index'],
+                ['sunshine_seconds', 'Sunshine'],
+            ];
+            const targets = [['Input', 'Burn'], ['Replenishment', 'Supply']];
+
+            // Align predictions and weather on shared dates only
+            const burnByDate = {}, supplyByDate = {};
+            rawRecords.forEach(r => {
+                burnByDate[r.event_date] = r.Input;
+                supplyByDate[r.event_date] = r.Replenishment;
+            });
+            const sharedDates = Object.keys(burnByDate).filter(d => allWeather[d]);
+            if (sharedDates.length < 2) {
+                card.style.display = 'none';
+                return;
+            }
+
+            const burnSeries = sharedDates.map(d => burnByDate[d]);
+            const supplySeries = sharedDates.map(d => supplyByDate[d]);
+            const targetSeries = { Input: burnSeries, Replenishment: supplySeries };
+
+            const z = targets.map(([targetKey]) =>
+                weatherVars.map(([varKey]) => {
+                    const weatherSeries = sharedDates.map(d => allWeather[d][varKey]);
+                    return pearsonCorrelation(targetSeries[targetKey], weatherSeries);
+                })
+            );
+
+            card.style.display = 'flex';
+            document.getElementById('correlation-sub-title').innerText =
+                `Pearson correlation between ${entityDisplayName(selectedEntity)}'s daily Burn/Supply and each weather variable, over ${sharedDates.length} shared days`;
+
+            const trace = {
+                type: 'heatmap',
+                x: weatherVars.map(([, label]) => label),
+                y: targets.map(([, label]) => label),
+                z: z,
+                zmin: -1,
+                zmax: 1,
+                colorscale: [
+                    [0, '#b91c1c'], [0.25, '#f3a683'], [0.5, '#f5f5f4'],
+                    [0.75, '#7db8e8'], [1, '#1890d7']
+                ],
+                colorbar: { title: { text: 'r', font: { family: 'Roboto', size: 11, color: '#475569' } }, tickfont: { family: 'Roboto', size: 10, color: '#475569' } },
+                hovertemplate: '%{y} vs %{x}<br>r = %{z:.2f}<extra></extra>',
+                texttemplate: '%{z:.2f}',
+                textfont: { family: 'Roboto', size: 12, color: '#0f172a' }
+            };
+
+            const layout = {
+                margin: { l: 70, r: 20, t: 10, b: 90 },
+                paper_bgcolor: 'transparent',
+                plot_bgcolor: 'transparent',
+                font: { family: 'Roboto', size: 11, color: '#475569' },
+                xaxis: { tickfont: { family: 'Roboto', size: 11, color: '#475569' } },
+                yaxis: { tickfont: { family: 'Roboto', size: 11, color: '#475569' }, autorange: 'reversed' }
+            };
+
+            const plotConfig = { responsive: true, displaylogo: false };
+            if (corrChartInitialized) {
+                Plotly.react('correlationChart', [trace], layout, plotConfig);
+            } else {
+                Plotly.newPlot('correlationChart', [trace], layout, plotConfig);
+                corrChartInitialized = true;
+            }
+        }
+
+        // Initialize on page load. Weather is fetched once fetchForecastData()
+        // has populated the entity selector, so the first weather fetch already
+        // targets the selected power station rather than racing the dropdown fill.
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchForecastData();
+            fetchScenarioData();
+            fetchForecastMetrics();
+            fetchOotHistory();
+        });
+
+        let progressTimer = null;
+
+        function startProgressPolling(){
+
+            document
+                .getElementById("initializeModal")
+                .classList.remove("hidden");
+
+            progressTimer = setInterval(loadProgress,1000);
+
+        }
+
+        function stopProgressPolling(){
+
+            clearInterval(progressTimer);
+
+        }
+
+        async function loadProgress(){
+
+        const response = await fetch("/api/initialize-progress");
+
+        const progress = await response.json();
+
+        document.getElementById("initializeStep").innerText =
+            progress.step;
+
+        document.getElementById("initializePercent").innerText =
+            progress.percent + "%";
+
+        document.getElementById("initializeProgress").style.width =
+            progress.percent + "%";
+
+        if(!progress.running){
+
+            stopProgressPolling();
+
+            setTimeout(()=>{
+
+                document
+                    .getElementById("initializeModal")
+                    .classList.add("hidden");
+
+            },800);
+
+        }
+
+    }
+    document
+    .getElementById("initializeBtn")
+    .addEventListener("click", initializeForecastPipeline);
+    async function initializeForecastPipeline(){
+
+    startProgressPolling();
+
+    try{
+
+        await fetch("/api/initialize",{
+            method:"POST"
+        });
+
+        await loadProgress();
+
+        fetchForecastData();
+        fetchScenarioData();
+        fetchForecastMetrics();
+        fetchOotHistory();
+
+    }
+    catch(err){
+        console.error(err);
+        stopProgressPolling();
+        alert("Initialization failed.");
+    }
+
+}
+    </script>
+    <!-- ==============================================
+Forecast Initialization Progress
+============================================== -->
+
+<div id="initializeModal" class="initialize-modal hidden">
+
+    <div class="initialize-card">
+
+        <h2>Initializing Forecast System</h2>
+
+        <p id="initializeStep">
+            Starting...
+        </p>
+
+        <div class="progress-bar">
+
+            <div
+                id="initializeProgress"
+                class="progress-fill"
+                style="width:0%">
+            </div>
+
+        </div>
+
+        <div
+            id="initializePercent"
+            class="progress-percent">
+
+            0%
+
+        </div>
+
+    </div>
+
+</div>
+</body>
+</html>
