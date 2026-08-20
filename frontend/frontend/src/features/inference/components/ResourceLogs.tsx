@@ -211,7 +211,7 @@ const ResourceLogs = () => {
 
                 borderColor: "divider",
 
-                borderRadius: "12px",
+                borderRadius: 3,
 
               }}
 

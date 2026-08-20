@@ -94,7 +94,7 @@ const DashboardHeader = ({ title, subtitle }: DashboardHeaderProps) => {
           <Tooltip title={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
             <IconButton
               onClick={toggleMode}
-              sx={{ border: 1, borderColor: "divider", borderRadius: "10px", color: "text.secondary" }}
+              sx={{ border: 1, borderColor: "divider", borderRadius: 2, color: "text.secondary" }}
             >
               {mode === "dark" ? <LightModeRounded /> : <DarkModeRounded />}
             </IconButton>
@@ -117,7 +117,7 @@ const DashboardHeader = ({ title, subtitle }: DashboardHeaderProps) => {
               sx={{
                 border: 1,
                 borderColor: "divider",
-                borderRadius: "10px",
+                borderRadius: 2,
                 bgcolor: autoRefresh ? "rgba(24,144,215,0.12)" : "transparent",
                 color: autoRefresh ? "primary.main" : "text.secondary",
               }}
@@ -138,7 +138,7 @@ const DashboardHeader = ({ title, subtitle }: DashboardHeaderProps) => {
                 sx={{
                   border: 1,
                   borderColor: "divider",
-                  borderRadius: "10px",
+                  borderRadius: 2,
                   color: "primary.main",
                 }}
               >

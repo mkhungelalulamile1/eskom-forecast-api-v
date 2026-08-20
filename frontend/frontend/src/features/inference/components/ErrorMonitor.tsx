@@ -116,7 +116,7 @@ border:"1px solid",
 
 borderColor:"divider",
 
-borderRadius: "12px",
+borderRadius:3,
 
 }}
 

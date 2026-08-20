@@ -49,7 +49,7 @@ const MetricCard = ({
     <Card
       sx={{
         height: "100%",
-        borderRadius: "12px",
+        borderRadius: 3,
       }}
     >
       <CardContent>
@@ -95,7 +95,7 @@ const MetricCard = ({
             sx={{
               width: 44,
               height: 44,
-              borderRadius: "10px",
+              borderRadius: 2,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -170,7 +170,7 @@ const MonitoringSummary = ({
       <Card
         sx={{
           mb: 2,
-          borderRadius: "12px",
+          borderRadius: 3,
         }}
       >
         <CardContent>
@@ -372,7 +372,7 @@ const MonitoringSummary = ({
         <Card
           sx={{
             mt: 2,
-            borderRadius: "12px",
+            borderRadius: 3,
           }}
         >
           <CardContent>

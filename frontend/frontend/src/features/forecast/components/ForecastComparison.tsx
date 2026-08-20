@@ -101,7 +101,7 @@ const ForecastComparison = () => {
       elevation={0}
       sx={{
         p: 4,
-        borderRadius: "12px",
+        borderRadius: 4,
         border: "1px solid",
         borderColor: "divider",
       }}

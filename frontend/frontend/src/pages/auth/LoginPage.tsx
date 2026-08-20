@@ -165,7 +165,7 @@ to={item.path}
 
 sx={{
 
-borderRadius: "12px",
+borderRadius:4,
 
 mb:1,
 
@@ -253,7 +253,7 @@ p:3,
 
 sx={{
 
-borderRadius: "12px",
+borderRadius:4,
 
 }}
 

@@ -89,7 +89,7 @@ const ModelComparison = () => {
               elevation={0}
               sx={{
                 p:3,
-                borderRadius: "12px",
+                borderRadius:3,
                 border:"1px solid",
                 borderColor:"divider",
               }}

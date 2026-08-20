@@ -5,12 +5,6 @@ import {
 } from "@mui/icons-material";
 
 import {
-
-/**
- * DEMO DATA — this component is not mounted by any route. The rows
- * below are placeholder examples, NOT the real power-station list
- * (that always comes from the backend via useForecastEntities).
- */
   Avatar,
   Box,
   Chip,
@@ -19,6 +13,28 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+
+/**
+ * =====================================================
+ * FORECAST HISTORY - DEPRECATED/UNUSED
+ * =====================================================
+ * 
+ * WARNING: This component contains MOCK/HARDCODED data
+ * and is NOT currently imported or used anywhere in the application.
+ * 
+ * HARDCODED DATA:
+ * - 4 fake forecast runs with stations: Kendal, Matimba, Medupi, Tutuka
+ * - Static accuracy percentages and timestamps
+ * 
+ * If this component is ever reactivated, it MUST be updated to:
+ * 1. Connect to a real backend endpoint (e.g., /api/forecast-history)
+ * 2. Use React Query to fetch dynamic data
+ * 3. Remove the hardcoded history array
+ * 
+ * Current Status: Orphaned component (not mounted anywhere)
+ * See InferenceHistory.tsx for example of proper backend connection
+ * =====================================================
+ */
 
 interface ForecastRun {
   id: number;
@@ -31,6 +47,9 @@ interface ForecastRun {
   status: "Completed" | "Running" | "Failed";
 }
 
+/**
+ * HARDCODED MOCK DATA - Replace with backend when component is used
+ */
 const history: ForecastRun[] = [
   {
     id: 4812,
@@ -81,7 +100,7 @@ const ForecastHistory = () => {
       elevation={0}
       sx={{
         p: 4,
-        borderRadius: "12px",
+        borderRadius: 4,
         border: "1px solid",
         borderColor: "divider",
       }}
@@ -187,12 +206,12 @@ const ForecastHistory = () => {
 
             <Box
               sx={{
-                display:"grid",
+                display: "grid",
                 gridTemplateColumns:
                   "60px 1.5fr 1.5fr 1fr 120px 120px",
-                alignItems:"center",
-                px:2,
-                py:2,
+                alignItems: "center",
+                px: 2,
+                py: 2,
               }}
             >
 
@@ -201,22 +220,22 @@ const ForecastHistory = () => {
 
               <Avatar
                 sx={{
-                  width:42,
-                  height:42,
+                  width: 42,
+                  height: 42,
 
                   bgcolor:
                     item.status === "Completed"
                       ? "#E8F5E9"
                       : item.status === "Running"
-                      ? "#FFF8E1"
-                      : "#FDECEC",
+                        ? "#FFF8E1"
+                        : "#FDECEC",
 
                   color:
                     item.status === "Completed"
                       ? "#2E7D32"
                       : item.status === "Running"
-                      ? "#F9A825"
-                      : "#D32F2F",
+                        ? "#F9A825"
+                        : "#D32F2F",
                 }}
               >
 
@@ -224,8 +243,8 @@ const ForecastHistory = () => {
                   item.status === "Completed"
                     ? <CheckCircleRounded />
                     : item.status === "Running"
-                    ? <ScheduleRounded />
-                    : <ErrorRounded />
+                      ? <ScheduleRounded />
+                      : <ErrorRounded />
                 }
 
               </Avatar>
@@ -322,12 +341,12 @@ const ForecastHistory = () => {
                   item.status === "Completed"
                     ? "success"
                     : item.status === "Running"
-                    ? "warning"
-                    : "error"
+                      ? "warning"
+                      : "error"
                 }
                 sx={{
-                  width:"fit-content",
-                  fontWeight:600,
+                  width: "fit-content",
+                  fontWeight: 600,
                 }}
               />
 

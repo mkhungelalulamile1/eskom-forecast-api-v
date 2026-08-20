@@ -213,7 +213,7 @@ const RunForecastButton = () => {
 
           px: 2,
 
-          borderRadius: "12px",
+          borderRadius: 2.5,
 
           textTransform:
             "none",

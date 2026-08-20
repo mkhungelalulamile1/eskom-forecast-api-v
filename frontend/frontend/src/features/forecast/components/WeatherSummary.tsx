@@ -17,14 +17,6 @@ import {
   useWeatherSummary,
 } from "../hooks/useWeather";
 
-
-import {
-  infoTint,
-  raisedFill,
-  softBorder,
-  softBorderColor,
-} from "../../../theme/surfaces";
-
 interface WeatherSummaryProps {
   entityId: string;
 }
@@ -53,9 +45,9 @@ const WeatherMetric = ({
           xs: 2,
           md: 2.5,
         },
-        borderRadius: "12px",
+        borderRadius: 3,
         border: "1px solid",
-        borderColor: softBorderColor,
+        borderColor: "#DCE5F5",
         bgcolor: background,
         display: "flex",
         flexDirection: "column",
@@ -75,7 +67,7 @@ const WeatherMetric = ({
             width: 44,
             height: 44,
             flexShrink: 0,
-            borderRadius: "10px",
+            borderRadius: 2,
             bgcolor:
               "rgba(255,255,255,0.75)",
             display: "flex",
@@ -90,7 +82,7 @@ const WeatherMetric = ({
         <Typography
           variant="body2"
           fontWeight={700}
-          color="text.secondary"
+          color="#68758A"
           sx={{
             whiteSpace: "normal",
             wordBreak: "break-word",
@@ -133,9 +125,10 @@ const WeatherSummary = ({
       <Box
         sx={{
           p: 4,
-          bgcolor: "transparent",
-          border: softBorder,
-          borderRadius: "12px",
+          bgcolor: "#FFFFFF",
+          border:
+            "1px solid #E0E6EF",
+          borderRadius: 4,
         }}
       >
         <Typography color="text.secondary">
@@ -153,9 +146,10 @@ const WeatherSummary = ({
       <Box
         sx={{
           p: 4,
-          bgcolor: "transparent",
-          border: softBorder,
-          borderRadius: "12px",
+          bgcolor: "#FFFFFF",
+          border:
+            "1px solid #E0E6EF",
+          borderRadius: 4,
         }}
       >
         <Typography color="error">
@@ -209,9 +203,10 @@ const WeatherSummary = ({
   return (
     <Box
       sx={{
-        bgcolor: "transparent",
-        border: softBorder,
-        borderRadius: "12px",
+        bgcolor: "#FFFFFF",
+        border:
+          "1px solid #E0E6EF",
+        borderRadius: 4,
         p: {
           xs: 2.5,
           md: 4,
@@ -239,8 +234,8 @@ const WeatherSummary = ({
               width: 64,
               height: 64,
               flexShrink: 0,
-              borderRadius: "12px",
-              bgcolor: infoTint,
+              borderRadius: 3,
+              bgcolor: "#EEF4FF",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -287,8 +282,8 @@ const WeatherSummary = ({
             sx={{
               px: 2,
               py: 1.25,
-              borderRadius: "12px",
-              bgcolor: infoTint,
+              borderRadius: 2.5,
+              bgcolor: "#EEF4FF",
               color: "text.primary",
               display: "flex",
               alignItems: "center",
@@ -315,13 +310,13 @@ const WeatherSummary = ({
             sx={{
               px: 2,
               py: 1.25,
-              borderRadius: "12px",
-              bgcolor: raisedFill,
+              borderRadius: 2.5,
+              bgcolor: "#F4F6F9",
             }}
           >
             <Typography
               fontWeight={700}
-              color="text.secondary"
+              color="#68758A"
             >
               {data.condition}
             </Typography>

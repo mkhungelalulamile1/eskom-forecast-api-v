@@ -177,7 +177,7 @@ const StatCard = ({
 
                 fontWeight: 700,
 
-                borderRadius: "10px",
+                borderRadius: 2,
               }}
               icon={
                 negative ? (

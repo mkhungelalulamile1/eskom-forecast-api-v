@@ -43,13 +43,6 @@ export const ThemeModeProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, mode);
-
-    /*
-     * Expose the active mode to plain CSS (index.css) so global,
-     * non-MUI surfaces — recharts SVG text, grid lines, tooltips and
-     * scrollbars — can follow the theme instead of staying light.
-     */
-    document.documentElement.setAttribute("data-theme", mode);
   }, [mode]);
 
   const value = useMemo<ThemeModeContextValue>(

@@ -59,14 +59,8 @@ const PanelCard = ({
         flexDirection: "column",
         borderRadius: "12px !important",
         border: "1px solid",
-        borderColor: (t) =>
-          t.palette.mode === "dark"
-            ? "rgba(255,255,255,0.55)"
-            : t.palette.divider,
-        bgcolor: (t) =>
-          t.palette.mode === "dark"
-            ? "transparent"
-            : t.palette.background.paper,
+        borderColor: "divider",
+        bgcolor: "background.paper",
         boxShadow: (t) =>
           t.palette.mode === "dark"
             ? "0 10px 30px rgba(0,0,0,0.4)"
@@ -117,15 +111,11 @@ const PanelCard = ({
                 sx={{
                   width: 40,
                   height: 40,
-                  borderRadius: "10px",
+                  borderRadius: 2,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  bgcolor: (t) =>
-                    alpha(
-                      accentColor,
-                      t.palette.mode === "dark" ? 0.2 : 0.1
-                    ),
+                  bgcolor: alpha(accentColor, 0.1),
                   color: accentColor,
                   flexShrink: 0,
                 }}
@@ -167,12 +157,9 @@ const PanelCard = ({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              bgcolor: (t) =>
-                t.palette.mode === "dark"
-                  ? "rgba(11,22,38,0.72)"
-                  : "rgba(255,255,255,0.72)",
+              bgcolor: "rgba(255,255,255,0.72)",
               backdropFilter: "blur(2px)",
-              borderRadius: "10px",
+              borderRadius: 2,
               zIndex: 2,
             }}
           >

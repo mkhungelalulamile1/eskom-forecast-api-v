@@ -1,13 +1,14 @@
 import {
   Box,
+  Chip,
+  Stack,
   Typography,
 } from "@mui/material";
 
 import {
   CheckCircleRounded,
   ErrorOutlineRounded,
-  FunctionsRounded,
-  StraightenRounded,
+  TrendingDownRounded,
   TrendingUpRounded,
 } from "@mui/icons-material";
 
@@ -19,9 +20,6 @@ import {
   useModelMetrics,
 } from "../hooks/useModelPerformance";
 
-
-
-import KpiStatCard from "../../../components/common/KpiStatCard";
 
 interface ModelPerformanceKPIsProps {
   horizon?: string;
@@ -242,45 +240,107 @@ const ModelPerformanceKPIs = ({
    * --------------------------------------------------
    * PERFORMANCE INTERPRETATION
    * --------------------------------------------------
-   *
-   * NRMSE drives the qualitative badge on the NRMSE card.
    */
 
   const getNrmseStatus = () => {
 
-    if (averageNrmse === null) {
+    if (
+      averageNrmse === null
+    ) {
       return {
         label: "No data",
-        color: "#7C8BA6",
-        icon: <ErrorOutlineRounded />,
+        color: "#68758A",
+        background: "#F4F6F9",
+        icon:
+          <ErrorOutlineRounded />,
       };
     }
 
-    if (averageNrmse <= 25) {
+
+    if (
+      averageNrmse <= 25
+    ) {
       return {
         label: "Strong",
-        color: "#1E9E6A",
-        icon: <CheckCircleRounded />,
+        color: "#15803D",
+        background: "#ECFDF3",
+        icon:
+          <CheckCircleRounded />,
       };
     }
 
-    if (averageNrmse <= 50) {
+
+    if (
+      averageNrmse <= 50
+    ) {
       return {
         label: "Review",
-        color: "#E8A008",
-        icon: <ErrorOutlineRounded />,
+        color: "#B45309",
+        background: "#FFF7E8",
+        icon:
+          <ErrorOutlineRounded />,
       };
     }
+
 
     return {
       label: "Attention",
-      color: "#D64545",
-      icon: <ErrorOutlineRounded />,
+      color: "#DC2626",
+      background: "#FFF1F2",
+      icon:
+        <ErrorOutlineRounded />,
     };
   };
 
 
-  const nrmseStatus = getNrmseStatus();
+  const nrmseStatus =
+    getNrmseStatus();
+
+
+  /*
+   * --------------------------------------------------
+   * LOADING
+   * --------------------------------------------------
+   */
+
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(2, minmax(0, 1fr))",
+            lg: "repeat(4, minmax(0, 1fr))",
+          },
+          gap: 2.5,
+        }}
+      >
+        {[
+          "RMSE",
+          "MAE",
+          "NRMSE",
+          "R²",
+        ].map(
+          (
+            label
+          ) => (
+            <KpiCard
+              key={label}
+              label={label}
+              description="Loading model performance..."
+              value="—"
+              icon={
+                <ErrorOutlineRounded />
+              }
+              iconColor="#68758A"
+              iconBackground="#F4F6F9"
+            />
+          )
+        )}
+      </Box>
+    );
+  }
 
 
   /*
@@ -294,13 +354,10 @@ const ModelPerformanceKPIs = ({
       <Box
         sx={{
           p: 4,
-          bgcolor: "transparent",
+          bgcolor: "background.paper",
           border: "1px solid",
-          borderColor: (t) =>
-            t.palette.mode === "dark"
-              ? "rgba(255,255,255,0.55)"
-              : "divider",
-          borderRadius: "12px",
+          borderColor: "divider",
+          borderRadius: 12,
         }}
       >
         <Typography
@@ -319,17 +376,10 @@ const ModelPerformanceKPIs = ({
    * --------------------------------------------------
    * UI
    * --------------------------------------------------
-   *
-   * Uses the SAME KpiStatCard as the Forecast page KPI row, so
-   * the icon tile, spacing and value baseline line up exactly
-   * between the two dashboards.
    */
-
-  const loadingText = isLoading ? "—" : undefined;
 
   return (
     <Box
-      className="eskom-stagger"
       sx={{
         display: "grid",
 
@@ -340,80 +390,255 @@ const ModelPerformanceKPIs = ({
         },
 
         gap: 2.5,
-
-        width: "100%",
       }}
     >
 
-        <KpiStatCard
-          title="Average RMSE"
-          subtitle="Root mean squared error"
-          text={
-            loadingText ??
-            (averageRmse === null
-              ? "—"
-              : formatNumber(averageRmse))
-          }
-          color="#0054A6"
-          icon={<StraightenRounded />}
-        />
+      <KpiCard
+        label="Average RMSE"
+        description="Root mean squared error"
+        value={formatNumber(
+          averageRmse
+        )}
+        icon={
+          <TrendingDownRounded />
+        }
+        iconColor="#1264FF"
+        iconBackground="#EEF4FF"
+      />
 
 
-        <KpiStatCard
-          title="Average MAE"
-          subtitle="Mean absolute error"
-          text={
-            loadingText ??
-            (averageMae === null
-              ? "—"
-              : formatNumber(averageMae))
-          }
-          color="#1890d7"
-          icon={<FunctionsRounded />}
-        />
+      <KpiCard
+        label="Average MAE"
+        description="Mean absolute error"
+        value={formatNumber(
+          averageMae
+        )}
+        icon={
+          <TrendingDownRounded />
+        }
+        iconColor="#1683D8"
+        iconBackground="#F0F7FF"
+      />
 
 
-        <KpiStatCard
-          title="Average NRMSE"
-          subtitle="Normalised model error"
-          text={
-            loadingText ??
-            (averageNrmse === null
-              ? "—"
-              : `${formatNumber(averageNrmse)}%`)
-          }
-          color={nrmseStatus.color}
-          icon={nrmseStatus.icon}
-          statusLabel={
-            isLoading
-              ? undefined
-              : nrmseStatus.label
-          }
-          statusColor={nrmseStatus.color}
-        />
+      <KpiCard
+        label="Average NRMSE"
+        description="Normalised model error"
+        value={
+          averageNrmse !== null
+            ? `${formatNumber(
+                averageNrmse
+              )}%`
+            : "—"
+        }
+        icon={
+          nrmseStatus.icon
+        }
+        iconColor={
+          nrmseStatus.color
+        }
+        iconBackground={
+          nrmseStatus.background
+        }
+        statusLabel={
+          nrmseStatus.label
+        }
+        statusColor={
+          nrmseStatus.color
+        }
+        statusBackground={
+          nrmseStatus.background
+        }
+      />
 
 
-        <KpiStatCard
-          title="Average R²"
-          subtitle="Explained variance"
-          text={
-            loadingText ??
-            (averageR2 === null
-              ? "—"
-              : formatNumber(averageR2, 3))
-          }
-          color="#1E9E6A"
-          icon={<TrendingUpRounded />}
-        />
+      <KpiCard
+        label="Average R²"
+        description="Explained variance"
+        value={
+          averageR2 !== null
+            ? formatNumber(
+                averageR2,
+                3
+              )
+            : "—"
+        }
+        icon={
+          <TrendingUpRounded />
+        }
+        iconColor="#16A34A"
+        iconBackground="#ECFDF3"
+      />
 
 
-      {/*
-       * SMAPE is calculated from the same backend records and kept
-       * here so it can be surfaced in a secondary KPI row later.
+      {/* 
+       * Keep these available if you want
+       * to expose them later in a secondary
+       * KPI row.
+       *
+       * They are calculated from REAL backend
+       * records, not mock data.
        */}
-      <Box sx={{ display: "none" }}>
-        {formatNumber(averageSmape)}
+
+      <Box
+        sx={{
+          display: "none",
+        }}
+      >
+        {formatNumber(
+          averageSmape
+        )}
       </Box>
+
+    </Box>
+  );
+};
+
+
+/*
+ * ======================================================
+ * KPI CARD
+ * ======================================================
+ */
+
+interface KpiCardProps {
+  label: string;
+  description: string;
+  value: string;
+  icon: React.ReactNode;
+  iconColor: string;
+  iconBackground: string;
+
+  statusLabel?: string;
+  statusColor?: string;
+  statusBackground?: string;
+}
+
+
+const KpiCard = ({
+  label,
+  description,
+  value,
+  icon,
+  iconColor,
+  iconBackground,
+  statusLabel,
+  statusColor,
+  statusBackground,
+}: KpiCardProps) => {
+
+  return (
+    <Box
+      sx={{
+        bgcolor: "background.paper",
+
+        border: "1px solid",
+          borderColor: "divider",
+
+        borderRadius: 12,
+
+        p: {
+          xs: 2.5,
+          md: 3,
+        },
+
+        minWidth: 0,
+
+        boxShadow:
+          "0 8px 24px rgba(23,43,77,0.04)",
+      }}
+    >
+
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="flex-start"
+      >
+
+        <Box
+          sx={{
+            minWidth: 0,
+          }}
+        >
+
+          <Typography
+            variant="caption"
+            fontWeight={800}
+            letterSpacing={1}
+            color="#68758A"
+          >
+            {label}
+          </Typography>
+
+
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            mt={0.75}
+          >
+            {description}
+          </Typography>
+
+        </Box>
+
+
+        <Box
+          sx={{
+            width: 44,
+            height: 44,
+            borderRadius: 3,
+
+            bgcolor:
+              iconBackground,
+
+            color:
+              iconColor,
+
+            display:
+              "flex",
+
+            alignItems:
+              "center",
+
+            justifyContent:
+              "center",
+
+            flexShrink: 0,
+          }}
+        >
+          {icon}
+        </Box>
+
+      </Stack>
+
+
+      <Typography
+        variant="h4"
+        fontWeight={800}
+        color="text.primary"
+        mt={3}
+      >
+        {value}
+      </Typography>
+
+
+      {statusLabel && (
+        <Chip
+          label={statusLabel}
+          size="small"
+          sx={{
+            mt: 1.5,
+
+            bgcolor:
+              statusBackground,
+
+            color:
+              statusColor,
+
+            fontWeight: 700,
+          }}
+        />
+      )}
 
     </Box>
   );

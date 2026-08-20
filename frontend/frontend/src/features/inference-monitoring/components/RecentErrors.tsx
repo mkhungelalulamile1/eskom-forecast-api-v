@@ -67,7 +67,7 @@ const RecentErrors = ({
   return (
     <Card
       sx={{
-        borderRadius: "12px",
+        borderRadius: 3,
         height: "100%",
       }}
     >
@@ -164,7 +164,7 @@ const RecentErrors = ({
                     sx={{
                       alignItems:
                         "flex-start",
-                      borderRadius: "10px",
+                      borderRadius: 2,
                     }}
                   >
                     <Stack spacing={0.75}>

@@ -16,12 +16,6 @@ import {
 } from "../hooks/useWeather";
 
 
-
-import {
-  neutralFill,
-  softBorder,
-} from "../../../theme/surfaces";
-
 interface WeatherSignalsProps {
   entityId: string;
 
@@ -55,9 +49,10 @@ const WeatherSignals = ({
       <Box
         sx={{
           p: 4,
-          bgcolor: "transparent",
-          border: softBorder,
-          borderRadius: "12px",
+          bgcolor: "#FFFFFF",
+          border:
+            "1px solid #E0E6EF",
+          borderRadius: 4,
         }}
       >
         <Typography
@@ -78,9 +73,10 @@ const WeatherSignals = ({
       <Box
         sx={{
           p: 4,
-          bgcolor: "transparent",
-          border: softBorder,
-          borderRadius: "12px",
+          bgcolor: "#FFFFFF",
+          border:
+            "1px solid #E0E6EF",
+          borderRadius: 4,
         }}
       >
         <Typography color="error">
@@ -113,9 +109,10 @@ const WeatherSignals = ({
   return (
     <Box
       sx={{
-        bgcolor: "transparent",
-        border: softBorder,
-        borderRadius: "12px",
+        bgcolor: "#FFFFFF",
+        border:
+          "1px solid #E0E6EF",
+        borderRadius: 4,
         p: {
           xs: 2.5,
           md: 4,
@@ -239,9 +236,10 @@ const WeatherSignals = ({
         sx={{
           mt: 3,
           p: 2.5,
-          borderRadius: "12px",
-          bgcolor: neutralFill,
-          border: softBorder,
+          borderRadius: 3,
+          bgcolor: "#F7F9FC",
+          border:
+            "1px solid #E6EBF2",
         }}
       >
 
@@ -350,7 +348,7 @@ const Signal = ({
     <Box
       sx={{
         p: 2.5,
-        borderRadius: "12px",
+        borderRadius: 3,
         bgcolor: background,
         minWidth: 0,
         height: "100%",
@@ -371,7 +369,7 @@ const Signal = ({
           sx={{
             width: 42,
             height: 42,
-            borderRadius: "10px",
+            borderRadius: 2,
             bgcolor:
               "rgba(255,255,255,0.75)",
             color,
@@ -387,7 +385,7 @@ const Signal = ({
 
         <Typography
           variant="body2"
-          color="text.secondary"
+          color="#68758A"
           fontWeight={700}
           sx={{
             minWidth: 0,

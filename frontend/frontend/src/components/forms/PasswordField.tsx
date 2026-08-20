@@ -64,7 +64,7 @@ const PasswordField = ({
 
         sx: {
           height: 58,
-          borderRadius: "12px",
+          borderRadius: 3,
           bgcolor: "#FAFBFC",
 
           "& fieldset": {

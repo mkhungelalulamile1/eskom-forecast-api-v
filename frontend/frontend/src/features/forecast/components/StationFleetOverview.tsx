@@ -8,12 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import { alpha } from "@mui/material/styles";
-
-import {
-  CheckCircleRounded,
-  FactoryRounded,
-} from "@mui/icons-material";
+import { FactoryRounded } from "@mui/icons-material";
 
 import PanelCard from "../../../components/common/PanelCard";
 import { formatCompact } from "../../../utils/format";
@@ -23,16 +18,12 @@ import { useForecastContext } from "../../../contexts/ForecastContext";
 
 /**
  * =====================================================
- * STATION FLEET OVERVIEW
+ * STATION FLEET OVERVIEW  (NEW FEATURE)
  * =====================================================
- * A single, at-a-glance comparison of every power station's latest
- * average Burn and Supply.
- *
- * The list is the dashboard's power-station picker: every row is a
- * real button that sets the global station filter, and the selected
- * station is highlighted — tinted row, accent rail, bold label and a
- * check icon — so it is obvious which station the rest of the
- * dashboard is showing.
+ * Added in the redesign: a single, at-a-glance comparison of
+ * every power station's latest average Burn and Supply. Rows are
+ * clickable and update the global station filter, making the whole
+ * fleet navigable straight from the dashboard.
  */
 const StationFleetOverview = () => {
   const { entityId, setEntityId, horizon, metric } = useForecastContext();
@@ -74,9 +65,7 @@ const StationFleetOverview = () => {
   return (
     <PanelCard
       title="Station Fleet"
-      subtitle={`Select a power station · ${
-        horizon === "monthly" ? "monthly" : "daily"
-      } baseline average`}
+      subtitle={`All power stations · ${horizon === "monthly" ? "monthly" : "daily"} baseline average`}
       icon={<FactoryRounded />}
       height="100%"
     >
@@ -86,12 +75,11 @@ const StationFleetOverview = () => {
         </Typography>
       )}
 
-      <Stack spacing={1}>
+      <Stack spacing={1.75}>
         {fleet.map((row) => {
           const val = metric === "supply" ? row.supply : row.burn;
           const pct = (val / maxValue) * 100;
           const active = row.id === entityId;
-
           return (
             <Tooltip
               key={row.id}
@@ -99,122 +87,34 @@ const StationFleetOverview = () => {
               placement="right"
             >
               <Box
-                component="button"
-                type="button"
                 onClick={() => setEntityId(row.id)}
-                aria-pressed={active}
                 sx={{
-                  /* reset the native button */
-                  appearance: "none",
-                  font: "inherit",
-                  textAlign: "left",
-                  width: "100%",
-                  display: "block",
-
                   cursor: "pointer",
-                  borderRadius: "10px",
-                  px: 1.25,
-                  py: 1,
-
-                  position: "relative",
-
-                  bgcolor: active
-                    ? (t) =>
-                        alpha(
-                          t.palette.primary.main,
-                          t.palette.mode === "dark" ? 0.22 : 0.09
-                        )
-                    : "transparent",
-
-                  border: "1px solid",
-                  borderColor: active
-                    ? (t) =>
-                        alpha(
-                          t.palette.primary.main,
-                          t.palette.mode === "dark" ? 0.75 : 0.45
-                        )
-                    : "transparent",
-
-                  transition:
-                    "background .16s ease, border-color .16s ease",
-
-                  /* selection rail */
-                  "&::before": active
-                    ? {
-                        content: '""',
-                        position: "absolute",
-                        left: 0,
-                        top: 8,
-                        bottom: 8,
-                        width: 3,
-                        borderRadius: "12px",
-                        bgcolor: "primary.main",
-                      }
-                    : undefined,
-
-                  "&:hover": {
-                    bgcolor: (t) =>
-                      alpha(
-                        t.palette.primary.main,
-                        t.palette.mode === "dark" ? 0.14 : 0.06
-                      ),
-                  },
-
-                  "&:focus-visible": {
-                    outline: "2px solid",
-                    outlineColor: "primary.main",
-                    outlineOffset: 2,
-                  },
+                  borderRadius: 2,
+                  p: 0.5,
+                  transition: "background .15s ease",
+                  "&:hover": { bgcolor: "rgba(0,84,166,0.06)" },
                 }}
               >
-                <Stack
-                  direction="row"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  sx={{ mb: 0.5, gap: 1 }}
-                >
-                  <Stack direction="row" spacing={0.75} alignItems="center" minWidth={0}>
-                    {active && (
-                      <CheckCircleRounded
-                        sx={{ fontSize: 14, color: "primary.main", flexShrink: 0 }}
-                      />
-                    )}
-
-                    <Typography
-                      variant="caption"
-                      noWrap
-                      sx={{
-                        fontWeight: active ? 800 : 600,
-                        color: active ? "primary.main" : "text.secondary",
-                      }}
-                    >
-                      {row.id}
-                    </Typography>
-                  </Stack>
-
+                <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.4 }}>
                   <Typography
                     variant="caption"
-                    sx={{
-                      fontWeight: 700,
-                      color: active ? "text.primary" : "text.secondary",
-                      whiteSpace: "nowrap",
-                    }}
+                    sx={{ fontWeight: active ? 800 : 600, color: active ? "primary.main" : "text.secondary" }}
                   >
+                    {row.id}
+                  </Typography>
+                  <Typography variant="caption" sx={{ fontWeight: 700, color: "text.secondary" }}>
                     {formatCompact(val)} {horizon === "daily" ? "t/d" : "t"}
                   </Typography>
                 </Stack>
-
                 <LinearProgress
                   variant="determinate"
                   value={Math.min(100, pct)}
                   color={metric === "supply" ? "secondary" : "primary"}
                   sx={{
                     height: 6,
-                    borderRadius: "12px",
-                    bgcolor: (t) =>
-                      t.palette.mode === "dark"
-                        ? "rgba(255,255,255,0.14)"
-                        : "#EDF1F8",
+                    borderRadius: 3,
+                    bgcolor: active ? "rgba(24,144,215,0.18)" : "#EDF1F8",
                   }}
                 />
               </Box>

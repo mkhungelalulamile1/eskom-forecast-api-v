@@ -37,7 +37,7 @@ const StatusPill = ({ label, tone = "info", dot = true }: StatusPillProps) => {
         gap: 0.75,
         px: 1.4,
         py: 0.6,
-        borderRadius: "999px",
+        borderRadius: 999,
         bgcolor: alpha(color, 0.1),
         border: `1px solid ${alpha(color, 0.25)}`,
       }}

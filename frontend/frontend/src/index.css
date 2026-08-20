@@ -12,24 +12,30 @@ code {
 }
 
 /* ============================================================
-   CARD RADIUS
+   CARD RADIUS GUARANTEE
    ============================================================
-   Only real surfaces (MUI Card / Paper) get the 12px radius.
-   The previous version force-rounded EVERY emotion-generated
-   element (`div[class^="css-"]`), which rounded the main left
-   navigation panel, toggle button groups, table cells and other
-   full-bleed elements that must stay square.
+   Belt-and-suspenders: force every MUI Paper/Card surface to a single
+   12px radius. Double-class selectors give higher specificity than the
+   single-class emotion styles MUI injects at runtime, so no card can
+   render any other radius (e.g. a stale cached emotion class).
    ============================================================ */
-.MuiCard-root,
-.MuiPaper-root:not(.MuiDrawer-paper):not(.MuiAppBar-root),
-.MuiDialog-paper {
-  border-radius: 12px;
+.MuiPaper-root.MuiPaper-root,
+.MuiCard-root.MuiCard-root,
+.MuiDialog-paper.MuiDialog-paper {
+  border-radius: 12px !important;
 }
 
-/* The main left navigation rail is a full-height panel: no radius. */
-.eskom-sidebar,
-.eskom-sidebar.MuiPaper-root {
-  border-radius: 0 !important;
+/* Force on ALL dynamically generated MUI classes */
+[class*="MuiPaper-root"],
+[class*="MuiCard-root"],
+[class*="css-"] {
+  border-radius: 12px !important;
+}
+
+/* Specific override for emotion-generated classes */
+div[class^="css-"],
+div[class*=" css-"] {
+  border-radius: 12px !important;
 }
 
 /* ============================================================
@@ -37,44 +43,25 @@ code {
    ============================================================ */
 .MuiCard-root,
 .MuiPaper-root {
-  box-sizing: border-box;
-  overflow-wrap: break-word;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
 }
 
-/* Typography overflow handling — wrap long strings, but never
-   hyphenate/split ordinary words mid-way (that produced labels like
-   "Temperatu re"). */
+/* Ensure all child content respects card boundaries */
+.MuiCard-root>*,
+.MuiPaper-root>* {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Typography overflow handling */
 .MuiTypography-root {
-  overflow-wrap: break-word;
-}
-
-/* ============================================================
-   CHARTS — keep recharts legible in dark mode
-   ============================================================ */
-[data-theme="dark"] .recharts-cartesian-axis-tick-value tspan,
-[data-theme="dark"] .recharts-text tspan {
-  fill: #A7B4CC;
-}
-
-[data-theme="dark"] .recharts-cartesian-grid line,
-[data-theme="dark"] .recharts-cartesian-axis-line,
-[data-theme="dark"] .recharts-cartesian-axis-tick-line {
-  stroke: rgba(255, 255, 255, 0.16);
-}
-
-[data-theme="dark"] .recharts-default-tooltip,
-[data-theme="dark"] .recharts-tooltip-wrapper > div {
-  background-color: #16243C !important;
-  border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  color: #E7EDF7 !important;
-}
-
-[data-theme="dark"] .recharts-default-tooltip .recharts-tooltip-label {
-  color: #E7EDF7 !important;
-}
-
-[data-theme="dark"] .recharts-legend-item-text {
-  color: #A7B4CC !important;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  hyphens: auto !important;
 }
 
 /* ============================================================
@@ -233,30 +220,4 @@ code {
 
 .eskom-stagger>*:nth-child(10) {
   animation-delay: 0.56s;
-}
-
-/* ============================================================
-   DARK MODE SCROLLBAR
-   ============================================================ */
-[data-theme="dark"] ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.22);
-  background-clip: content-box;
-}
-
-[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.34);
-  background-clip: content-box;
-}
-
-/* ============================================================
-   SCROLL STABILITY
-   ============================================================
-   The dashboard's scroll container always reserves the scrollbar
-   gutter. Without this, panels that grow/shrink while scrolling
-   (the sticky Forecast Context bar) made the scrollbar appear and
-   disappear, which showed up as flickering.
-   ============================================================ */
-.eskom-scroll-container {
-  scrollbar-gutter: stable;
-  overflow-anchor: none;
 }

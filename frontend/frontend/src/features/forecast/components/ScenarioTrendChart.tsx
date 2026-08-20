@@ -28,16 +28,6 @@ import {
   useForecastScenarioData,
 } from "../hooks/useForecast";
 
-
-import {
-  cardBorderColor,
-  cardFill,
-  hairline,
-  infoTint,
-  neutralFill,
-  softBorder,
-} from "../../../theme/surfaces";
-
 interface ScenarioTrendChartProps {
   filters: ForecastFilters;
 }
@@ -391,9 +381,10 @@ const ScenarioTrendChart = ({
     return (
       <Box
         sx={{
-          bgcolor: "transparent",
-          border: softBorder,
-          borderRadius: "12px",
+          bgcolor: "#FFFFFF",
+          border:
+            "1px solid #E3E8EF",
+          borderRadius: 4,
           p: {
             xs: 2.5,
             md: 3.5,
@@ -412,7 +403,7 @@ const ScenarioTrendChart = ({
             sx={{
               width: 44,
               height: 44,
-              borderRadius: "12px",
+              borderRadius: 2.5,
               bgcolor:
                 "rgba(18,100,255,0.08)",
               display: "flex",
@@ -469,9 +460,10 @@ const ScenarioTrendChart = ({
     return (
       <Box
         sx={{
-          bgcolor: "transparent",
-          border: softBorder,
-          borderRadius: "12px",
+          bgcolor: "#FFFFFF",
+          border:
+            "1px solid #E3E8EF",
+          borderRadius: 4,
           minHeight: 520,
           display: "flex",
           alignItems: "center",
@@ -543,10 +535,11 @@ const ScenarioTrendChart = ({
         width: "100%",
         height: "100%",
         minWidth: 0,
-        bgcolor: cardFill,
+        bgcolor:
+          "background.paper",
         border: "1px solid",
-        borderColor: cardBorderColor,
-        borderRadius: "12px",
+        borderColor: "divider",
+        borderRadius: 12,
         p: {
           xs: 2.5,
           md: 3.5,
@@ -580,7 +573,7 @@ const ScenarioTrendChart = ({
             sx={{
               width: 48,
               height: 48,
-              borderRadius: "12px",
+              borderRadius: 2.5,
               bgcolor:
                 "rgba(18,100,255,0.08)",
               display: "flex",
@@ -642,9 +635,10 @@ const ScenarioTrendChart = ({
               gap: 0.8,
               px: 1.5,
               py: 0.8,
-              borderRadius: "10px",
-              bgcolor: infoTint,
-              border: softBorder,
+              borderRadius: 2,
+              bgcolor: "#F4F7FF",
+              border:
+                "1px solid #D9E4FF",
             }}
           >
             <CalendarMonthRounded
@@ -691,8 +685,8 @@ const ScenarioTrendChart = ({
 
         <Box
           sx={{
-            bgcolor: neutralFill,
-            borderRadius: "12px",
+            bgcolor: "#F7F9FC",
+            borderRadius: 2.5,
             p: {
               xs: 1.75,
               md: 2,
@@ -747,8 +741,8 @@ const ScenarioTrendChart = ({
 
         <Box
           sx={{
-            bgcolor: neutralFill,
-            borderRadius: "12px",
+            bgcolor: "#F7F9FC",
+            borderRadius: 2.5,
             p: {
               xs: 1.75,
               md: 2,
@@ -802,8 +796,8 @@ const ScenarioTrendChart = ({
 
         <Box
           sx={{
-            bgcolor: neutralFill,
-            borderRadius: "12px",
+            bgcolor: "#F7F9FC",
+            borderRadius: 2.5,
             p: {
               xs: 1.75,
               md: 2,
@@ -1013,8 +1007,9 @@ const ScenarioTrendChart = ({
 
             <Tooltip
               contentStyle={{
-                border: "1px solid #E2E7EF",
-                borderRadius: "12px",
+                border:
+                  "1px solid #E3E8EF",
+                borderRadius: 12,
                 boxShadow:
                   "0 8px 25px rgba(23,43,77,0.12)",
                 padding:
@@ -1078,7 +1073,8 @@ const ScenarioTrendChart = ({
         sx={{
           mt: 2,
           pt: 2,
-          borderTop: hairline,
+          borderTop:
+            "1px solid #E3E8EF",
           display: "flex",
           justifyContent:
             "space-between",

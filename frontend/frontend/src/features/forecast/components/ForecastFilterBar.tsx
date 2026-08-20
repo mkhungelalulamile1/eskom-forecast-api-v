@@ -10,25 +10,31 @@ import {
 import FilterAltRoundedIcon from "@mui/icons-material/FilterAltRounded";
 import RestartAltRoundedIcon from "@mui/icons-material/RestartAltRounded";
 
-import { useForecastEntities } from "../hooks/useForecast";
-import { ForecastEntity } from "../types/forecast.types";
-
 /**
- * The station list is NEVER hard-coded: it is derived from the
- * entities the backend returns (`/api/scenario-data`), the same
- * source the global Forecast Context bar uses.
+ * =====================================================
+ * FORECAST FILTER BAR - DEPRECATED/UNUSED
+ * =====================================================
+ * 
+ * WARNING: This component contains HARDCODED power station names
+ * and is NOT currently imported or used anywhere in the application.
+ * 
+ * HARDCODED STATIONS: Kendal, Matla, Tutuka, Lethabo
+ * 
+ * If this component is ever reactivated, it MUST be updated to:
+ * 1. Use useForecastEntities() hook to fetch stations dynamically
+ * 2. Connect to the /api/entities endpoint
+ * 3. Remove the hardcoded MenuItem values
+ * 
  */
 const ForecastFilterBar = () => {
   const [station, setStation] = useState("");
   const [model, setModel] = useState("");
 
-  const { data: entities, isLoading } = useForecastEntities();
-
   return (
     <Box
       sx={{
         p: 3,
-        borderRadius: "10px",
+        borderRadius: 2,
         bgcolor: "background.paper",
         border: 1,
         borderColor: "divider",
@@ -46,18 +52,10 @@ const ForecastFilterBar = () => {
           onChange={(e) => setStation(e.target.value)}
         >
           <MenuItem value="">All Stations</MenuItem>
-
-          {isLoading && (
-            <MenuItem disabled value="__loading">
-              Loading stations…
-            </MenuItem>
-          )}
-
-          {(entities ?? []).map((entity: ForecastEntity) => (
-            <MenuItem key={entity.id} value={entity.id}>
-              {entity.label}
-            </MenuItem>
-          ))}
+          <MenuItem value="Kendal">Kendal</MenuItem>
+          <MenuItem value="Matla">Matla</MenuItem>
+          <MenuItem value="Tutuka">Tutuka</MenuItem>
+          <MenuItem value="Lethabo">Lethabo</MenuItem>
         </TextField>
 
         <TextField

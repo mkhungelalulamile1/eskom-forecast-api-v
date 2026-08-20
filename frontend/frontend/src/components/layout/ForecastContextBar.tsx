@@ -1,6 +1,5 @@
 import React, {
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -116,78 +115,6 @@ const ForecastContextBar = ({
   ] = useState(false);
 
 
-  /*
-   * Height of the bar in its expanded state.
-   *
-   * When the bar compacts it gets ~65px shorter, which used to pull
-   * the whole page up under the cursor mid-scroll — the "flicker".
-   * We measure the expanded height once and give the compact bar an
-   * equal amount of extra bottom margin, so the document height and
-   * every element below it stay exactly where they were.
-   */
-  const [
-    expandedHeight,
-    setExpandedHeight,
-  ] = useState<number | null>(null);
-
-  const [
-    compactHeight,
-    setCompactHeight,
-  ] = useState<number | null>(null);
-
-
-  useLayoutEffect(() => {
-
-    const element =
-      contextRef.current;
-
-    if (!element) {
-      return;
-    }
-
-    /*
-     * Measured in a LAYOUT effect (before paint) so the compensating
-     * margin below is applied in the same frame as the size change —
-     * the user never sees an intermediate, uncompensated frame.
-     */
-    const height =
-      element.getBoundingClientRect().height;
-
-    if (isCompact) {
-      setCompactHeight(
-        (current) =>
-          current === null
-            ? height
-            : current
-      );
-    } else {
-      setExpandedHeight(
-        (current) =>
-          current === null
-            ? height
-            : current
-      );
-    }
-
-  }, [
-    isCompact,
-  ]);
-
-
-  /*
-   * Extra bottom margin that keeps the bar's total footprint constant.
-   */
-  const heightCompensation =
-    isCompact &&
-    expandedHeight !== null &&
-    compactHeight !== null
-      ? Math.max(
-          0,
-          expandedHeight - compactHeight
-        )
-      : 0;
-
-
   useEffect(() => {
 
     const element =
@@ -245,62 +172,26 @@ const ForecastContextBar = ({
       window;
 
 
-    /*
-     * =================================================
-     * FLICKER-FREE COMPACTION
-     * =================================================
-     *
-     * Compacting the bar changes its height, which changes the
-     * scroll height of the container, which can immediately push
-     * the scroll position back across a single threshold — the
-     * bar then expands, and the loop repeats as a visible flicker.
-     *
-     * Two guards:
-     *
-     * 1. HYSTERESIS — separate enter (>96px) and exit (<32px)
-     *    thresholds, so a small layout shift can never flip the
-     *    state straight back.
-     *
-     * 2. requestAnimationFrame — at most one state update per
-     *    frame instead of one per scroll event.
-     */
+    const handleScroll =
+      () => {
 
-    let frame = 0;
-
-    const COMPACT_ENTER = 96;
-    const COMPACT_EXIT = 32;
-
-    const measure = () => {
-
-      frame = 0;
-
-      const scrollTop =
-        target === window
-          ? window.scrollY
-          : (
-              target as HTMLElement
-            ).scrollTop;
-
-      setIsCompact(
-        (compact) =>
-          compact
-            ? scrollTop > COMPACT_EXIT
-            : scrollTop > COMPACT_ENTER
-      );
-    };
+        const scrollTop =
+          target === window
+            ? window.scrollY
+            : (
+                target as HTMLElement
+              ).scrollTop;
 
 
-    const handleScroll = () => {
+        /*
+         * Compact after the user has
+         * moved down approximately 40px.
+         */
 
-      if (frame) {
-        return;
-      }
-
-      frame =
-        window.requestAnimationFrame(
-          measure
+        setIsCompact(
+          scrollTop > 40
         );
-    };
+      };
 
 
     target.addEventListener(
@@ -316,16 +207,10 @@ const ForecastContextBar = ({
      * Set the initial state.
      */
 
-    measure();
+    handleScroll();
 
 
     return () => {
-
-      if (frame) {
-        window.cancelAnimationFrame(
-          frame
-        );
-      }
 
       target.removeEventListener(
         "scroll",
@@ -507,11 +392,10 @@ const ForecastContextBar = ({
          * rounded floating-card appearance.
          */
 
-        /* Same 12px radius as every card; square while stuck. */
         borderRadius:
           isCompact
             ? 0
-            : "12px",
+            : 3,
 
 
         boxShadow:
@@ -537,13 +421,10 @@ const ForecastContextBar = ({
             : 2.5,
 
 
-        /*
-         * Base spacing below the bar, PLUS the height the compact
-         * state gave up. The bar's total footprint in the document
-         * therefore never changes, so nothing below it moves when the
-         * bar compacts mid-scroll.
-         */
-        marginBottom: `${24 + heightCompensation}px`,
+        mb:
+          isCompact
+            ? 2
+            : 3,
 
 
         /*
@@ -552,25 +433,11 @@ const ForecastContextBar = ({
          * =================================================
          */
 
-        /*
-         * IMPORTANT: never transition layout-affecting properties
-         * here. Animating padding/margin re-flowed the page on every
-         * frame of the animation, which is what read as scroll
-         * flicker. Only paint-only properties are animated now.
-         */
         transition:
-          "border-radius 180ms ease, " +
-          "box-shadow 180ms ease, " +
-          "background-color 180ms ease",
-
-        /*
-         * Sticky elements that repaint on every scroll frame are the
-         * classic source of scroll flicker in Chromium. Promoting the
-         * bar to its own compositor layer keeps it stable.
-         */
-        willChange: "padding, margin",
-
-        backfaceVisibility: "hidden",
+          "padding 220ms ease, " +
+          "margin-bottom 220ms ease, " +
+          "border-radius 220ms ease, " +
+          "box-shadow 220ms ease",
 
         isolation:
           "isolate",
@@ -594,7 +461,8 @@ const ForecastContextBar = ({
 
           minWidth: 0,
 
-
+          transition:
+            "margin-bottom 220ms ease",
         }}
       >
 
@@ -627,7 +495,7 @@ const ForecastContextBar = ({
                   ? 32
                   : 38,
 
-              borderRadius: "10px",
+              borderRadius: 2,
 
               display: "flex",
 
@@ -645,7 +513,9 @@ const ForecastContextBar = ({
 
               flexShrink: 0,
 
-
+              transition:
+                "width 220ms ease, " +
+                "height 220ms ease",
             }}
           >
 
@@ -718,9 +588,7 @@ const ForecastContextBar = ({
           {/* RESET */}
 
           <Button
-            variant="contained"
-            color="primary"
-            disableElevation
+            variant="outlined"
             size={
               isCompact
                 ? "small"
@@ -736,7 +604,6 @@ const ForecastContextBar = ({
               flexShrink: 0,
               fontWeight: 700,
               whiteSpace: "nowrap",
-              color: "primary.contrastText",
             }}
           >
             Reset
@@ -773,7 +640,8 @@ const ForecastContextBar = ({
 
           minWidth: 0,
 
-
+          transition:
+            "gap 220ms ease",
         }}
       >
 
@@ -1016,7 +884,8 @@ const Field = ({
             ? 1
             : 1.2,
 
-
+        transition:
+          "margin-bottom 220ms ease",
       }}
     >
       {label}

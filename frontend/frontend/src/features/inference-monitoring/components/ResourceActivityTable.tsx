@@ -127,7 +127,7 @@ const ResourceActivityTable = ({
   return (
     <Card
       sx={{
-        borderRadius: "12px",
+        borderRadius: 3,
       }}
     >
       <CardContent>

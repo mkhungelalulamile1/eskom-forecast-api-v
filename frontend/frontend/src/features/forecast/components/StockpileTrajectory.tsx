@@ -1,7 +1,5 @@
 import { useMemo, useState } from "react";
 
-
-import { alpha } from "@mui/material/styles";
 import {
   Box,
   Button,
@@ -10,7 +8,6 @@ import {
 } from "@mui/material";
 
 import {
-  Inventory2Rounded,
   WarningAmberRounded,
   TrendingDownRounded,
   TrendingUpRounded,
@@ -39,13 +36,6 @@ import {
   useForecastChart,
   useForecastEntities,
 } from "../hooks/useForecast";
-
-
-import {
-  cardBorderColor,
-  cardFill,
-  softBorder,
-} from "../../../theme/surfaces";
 
 interface StockpileTrajectoryProps {
   filters: ForecastFilters;
@@ -342,10 +332,10 @@ const StockpileTrajectory = ({
         width: "100%",
         height: "100%",
         minWidth: 0,
-        bgcolor: cardFill,
+        bgcolor: "background.paper",
         border: "1px solid",
-        borderColor: cardBorderColor,
-        borderRadius: "12px",
+        borderColor: "divider",
+        borderRadius: 12,
         p: {
           xs: 2.5,
           sm: 3,
@@ -377,41 +367,7 @@ const StockpileTrajectory = ({
         flexWrap="wrap"
         useFlexGap
       >
-        {/*
-          * Header matches every other card: a tinted icon tile on the
-          * left of the title block.
-          */}
-        <Stack
-          direction="row"
-          spacing={1.5}
-          alignItems="flex-start"
-          sx={{ minWidth: 0 }}
-        >
-          <Box
-            sx={{
-              width: 44,
-              height: 44,
-              borderRadius: "12px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-              mt: 0.25,
-              bgcolor: (t) =>
-                alpha(
-                  "#1264FF",
-                  t.palette.mode === "dark" ? 0.2 : 0.1
-                ),
-              color: (t) =>
-                t.palette.mode === "dark"
-                  ? "#6FC5F0"
-                  : "#1264FF",
-            }}
-          >
-            <Inventory2Rounded />
-          </Box>
-
-          <Box sx={{ minWidth: 0 }}>
+        <Box sx={{ minWidth: 0 }}>
           <Typography
             sx={{
               color: "text.primary",
@@ -456,8 +412,7 @@ const StockpileTrajectory = ({
               ? selectedStation.label
               : entityId || "No station selected"}
           </Typography>
-          </Box>
-        </Stack>
+        </Box>
 
         {/* =================================================
             UNIT SELECTOR
@@ -470,7 +425,7 @@ const StockpileTrajectory = ({
           sx={{
             flexShrink: 0,
             p: 0.5,
-            borderRadius: "10px",
+            borderRadius: 2,
             bgcolor: "action.hover",
             border: "1px solid",
             borderColor: "divider",
@@ -501,7 +456,7 @@ const StockpileTrajectory = ({
             }
             sx={{
               minWidth: 72,
-              borderRadius: "10px",
+              borderRadius: 1.5,
               textTransform: "none",
               fontWeight: 800,
             }}
@@ -522,7 +477,7 @@ const StockpileTrajectory = ({
             }
             sx={{
               minWidth: 116,
-              borderRadius: "10px",
+              borderRadius: 1.5,
               textTransform: "none",
               fontWeight: 800,
             }}
@@ -544,7 +499,7 @@ const StockpileTrajectory = ({
               gap: 1,
               px: 1.5,
               py: 1,
-              borderRadius: "10px",
+              borderRadius: 2,
               backgroundColor:
                 "rgba(245, 124, 0, 0.08)",
               border:
@@ -696,7 +651,7 @@ const StockpileTrajectory = ({
                   }}
                   axisLine={false}
                   tickLine={false}
-                  width={72}
+                  width={55}
                   tickFormatter={(value: number) =>
                     formatNumber(value)
                   }
@@ -720,8 +675,9 @@ const StockpileTrajectory = ({
                     formatDate(String(label))
                   }
                   contentStyle={{
-                    borderRadius: "12px",
-                    border: "1px solid #E2E7EF",
+                    borderRadius: 12,
+                    border:
+                      "1px solid #E3E8EF",
                     boxShadow:
                       "0 12px 30px rgba(23,43,77,0.10)",
                     padding: "10px 14px",

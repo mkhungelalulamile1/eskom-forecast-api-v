@@ -22,12 +22,6 @@ import {
 } from "../hooks/useForecast";
 
 
-
-import {
-  hairline,
-  neutralFill,
-} from "../../../theme/surfaces";
-
 interface ForecastResultsProps {
   filters: ForecastFilters;
 }
@@ -204,7 +198,7 @@ const ForecastResults = ({
           borderColor:
             "divider",
 
-          borderRadius: "12px",
+          borderRadius: 4,
 
           p: {
             xs: 2.5,
@@ -244,7 +238,7 @@ const ForecastResults = ({
           borderColor:
             "divider",
 
-          borderRadius: "12px",
+          borderRadius: 4,
 
           p: {
             xs: 2.5,
@@ -286,7 +280,7 @@ const ForecastResults = ({
           borderColor:
             "divider",
 
-          borderRadius: "12px",
+          borderRadius: 4,
 
           p: {
             xs: 2.5,
@@ -334,7 +328,7 @@ const ForecastResults = ({
         borderColor:
           "divider",
 
-        borderRadius: "12px",
+        borderRadius: 4,
 
         p: {
           xs: 2.5,
@@ -440,14 +434,16 @@ const ForecastResults = ({
 
             "& th": {
               textAlign: "left",
-              backgroundColor: neutralFill,
+              backgroundColor:
+                "#F7F9FC",
               color:
                 "#475569",
               fontSize: 13,
               fontWeight: 700,
               padding:
                 "16px 18px",
-              borderBottom: hairline,
+              borderBottom:
+                "1px solid #E5EAF0",
               whiteSpace:
                 "nowrap",
             },
@@ -455,7 +451,8 @@ const ForecastResults = ({
             "& td": {
               padding:
                 "17px 18px",
-              borderBottom: hairline,
+              borderBottom:
+                "1px solid #EEF1F5",
               color:
                 "text.primary",
               fontSize: 14,
@@ -464,7 +461,8 @@ const ForecastResults = ({
             },
 
             "& tbody tr:hover": {
-              backgroundColor: neutralFill,
+              backgroundColor:
+                "#FAFBFD",
             },
 
             "& tbody tr:last-child td": {

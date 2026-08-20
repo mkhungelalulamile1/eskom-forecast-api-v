@@ -17,7 +17,8 @@ import DataTable, {
   Column,
 } from "../../../components/common/DataTable";
 
-
+// WARNING: This component is NOT imported/used anywhere and contains MOCK DATA
+// If reactivated, must connect to /api/scenario-data or /api/forecast-data
 interface ForecastResult {
   id: number;
   date: string;
@@ -26,13 +27,13 @@ interface ForecastResult {
   variance: number;
   accuracy: number;
   status:
-    | "Completed"
-    | "Running"
-    | "Failed";
+  | "Completed"
+  | "Running"
+  | "Failed";
 }
 
 
-
+// HARDCODED MOCK DATA - Replace with backend when component is used
 const rows: ForecastResult[] = [
   {
     id: 1,
@@ -132,7 +133,7 @@ const ForecastTable = () => {
               : "warning"
           }
           sx={{
-            fontWeight:600,
+            fontWeight: 600,
           }}
         />
 
@@ -153,11 +154,11 @@ const ForecastTable = () => {
             row.status === "Completed"
               ? "success"
               : row.status === "Running"
-              ? "warning"
-              : "error"
+                ? "warning"
+                : "error"
           }
           sx={{
-            fontWeight:600,
+            fontWeight: 600,
           }}
         />
 
@@ -195,23 +196,23 @@ const ForecastTable = () => {
     <Paper
       elevation={0}
       sx={{
-        p:4,
-        borderRadius: "12px",
-        border:"1px solid",
-        borderColor:"divider",
+        p: 4,
+        borderRadius: 4,
+        border: "1px solid",
+        borderColor: "divider",
       }}
     >
 
 
       <Stack
         direction={{
-          xs:"column",
-          md:"row",
+          xs: "column",
+          md: "row",
         }}
         justifyContent="space-between"
         alignItems={{
-          xs:"flex-start",
-          md:"center",
+          xs: "flex-start",
+          md: "center",
         }}
         spacing={2}
         mb={3}
@@ -238,9 +239,9 @@ const ForecastTable = () => {
           <Typography
             variant="body2"
             sx={{
-              mt:1,
-              fontWeight:600,
-              color:"primary.main",
+              mt: 1,
+              fontWeight: 600,
+              color: "primary.main",
             }}
           >
             Arnot • Burn Prediction • Tactical (90 Days) • Actual Baseline

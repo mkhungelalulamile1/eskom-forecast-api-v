@@ -176,7 +176,7 @@ const LatencyChart = ({
   return (
     <Card
       sx={{
-        borderRadius: "12px",
+        borderRadius: 3,
         height: "100%",
       }}
     >
@@ -272,7 +272,7 @@ const LatencyChart = ({
                   flex: 1,
                   minWidth: 120,
                   p: 1.5,
-                  borderRadius: "10px",
+                  borderRadius: 2,
                   bgcolor: "action.hover",
                 }}
               >
@@ -300,7 +300,7 @@ const LatencyChart = ({
                   flex: 1,
                   minWidth: 120,
                   p: 1.5,
-                  borderRadius: "10px",
+                  borderRadius: 2,
                   bgcolor: "action.hover",
                 }}
               >
@@ -328,7 +328,7 @@ const LatencyChart = ({
                   flex: 1,
                   minWidth: 120,
                   p: 1.5,
-                  borderRadius: "10px",
+                  borderRadius: 2,
                   bgcolor: "action.hover",
                 }}
               >
@@ -356,7 +356,7 @@ const LatencyChart = ({
                   flex: 1,
                   minWidth: 120,
                   p: 1.5,
-                  borderRadius: "10px",
+                  borderRadius: 2,
                   bgcolor: "action.hover",
                 }}
               >

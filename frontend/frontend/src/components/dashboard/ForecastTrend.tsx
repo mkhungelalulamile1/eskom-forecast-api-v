@@ -317,7 +317,7 @@ const ForecastTrend = () => {
 
             <Tooltip
               contentStyle={{
-                borderRadius: "12px",
+                borderRadius: 12,
                 border: "none",
 
                 boxShadow:

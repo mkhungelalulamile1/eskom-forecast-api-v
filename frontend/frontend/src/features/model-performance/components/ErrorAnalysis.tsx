@@ -99,7 +99,7 @@ const ErrorAnalysis = () => {
           sx={{
             flex:1,
             p:3,
-            borderRadius: "12px",
+            borderRadius:3,
             bgcolor:"background.default",
           }}
         >
@@ -128,7 +128,7 @@ const ErrorAnalysis = () => {
           sx={{
             flex:1,
             p:3,
-            borderRadius: "12px",
+            borderRadius:3,
             bgcolor:"background.default",
           }}
         >
@@ -157,7 +157,7 @@ const ErrorAnalysis = () => {
           sx={{
             flex:1,
             p:3,
-            borderRadius: "12px",
+            borderRadius:3,
             bgcolor:"background.default",
           }}
         >
