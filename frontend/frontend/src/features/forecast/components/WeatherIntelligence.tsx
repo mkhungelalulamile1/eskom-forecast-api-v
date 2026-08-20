@@ -639,7 +639,9 @@ const WeatherIntelligence = ({
       />
 
 
-      {/* CURRENT VIEW */}
+      {/* [DATA: DYNAMIC] CURRENT VIEW — condition, temp max/min, rainfall,
+          cloud, humidity, wind, UV, sunshine + date all from
+          GET /api/weather-data (latest record for the station). */}
 
       {view === "current" && (
         <CurrentWeather
@@ -666,7 +668,8 @@ const WeatherIntelligence = ({
       )}
 
 
-      {/* OUTLOOK VIEW */}
+      {/* [DATA: DYNAMIC] OUTLOOK VIEW — per-day cards (condition, temps,
+          rainfall, wind) from the same API's forward records. */}
 
       {view !== "current" && (
         <>

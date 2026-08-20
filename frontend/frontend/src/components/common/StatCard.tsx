@@ -1,3 +1,5 @@
+// [DATA: none] presentational stat card — value passed by caller (used by the
+// unrouted dashboard and mock /inference components; their data verdicts apply).
 import React from "react";
 
 import {

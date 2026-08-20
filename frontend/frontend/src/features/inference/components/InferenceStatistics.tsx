@@ -1,3 +1,5 @@
+// ⚠️ /inference page is routed but HIDDEN from the sidebar navigation.
+// [DATA: MOCK] "Healthy" / "Running" etc. below are hardcoded demo strings.
 import {
   ApiRounded,
   DatasetRounded,

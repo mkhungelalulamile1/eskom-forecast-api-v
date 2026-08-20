@@ -1,3 +1,5 @@
+// Used ONLY by the unrouted Dashboard page.
+// [DATA: DYNAMIC] metrics computed from live forecast records.
 import {
   Box,
   Divider,

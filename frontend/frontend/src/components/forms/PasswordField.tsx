@@ -1,3 +1,4 @@
+// [DATA: STATIC-UI] controlled text input — no data source.
 import { useState } from "react";
 
 import {

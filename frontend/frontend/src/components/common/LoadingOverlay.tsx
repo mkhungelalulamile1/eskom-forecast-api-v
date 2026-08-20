@@ -1,3 +1,4 @@
+// UNUSED. [DATA: none] loading overlay.
 import {
   Box,
   CircularProgress,

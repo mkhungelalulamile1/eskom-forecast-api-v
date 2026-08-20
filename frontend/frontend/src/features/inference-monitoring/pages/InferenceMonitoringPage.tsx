@@ -1,3 +1,8 @@
+// /inference-monitoring is routed but HIDDEN from the sidebar navigation.
+// [DATA: DYNAMIC] the whole page is fed by useInferenceMonitoring() →
+// GET /api/inference-monitoring + /api/inference-monitoring/summary
+// (backend keeps these in memory — they reset on process restart).
+// RunForecastButton POSTs the real /api/run-forecast action.
 import React from "react";
 
 import {

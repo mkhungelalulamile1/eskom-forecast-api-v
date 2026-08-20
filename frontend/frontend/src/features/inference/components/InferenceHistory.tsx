@@ -1,3 +1,6 @@
+// ⚠️ /inference page is routed but HIDDEN from the sidebar navigation.
+// [DATA: DYNAMIC] fetches live inference history via axios (unlike the
+// other /inference components on this page, which are mock).
 import { useState, useMemo } from "react";
 import {
   CheckCircleRounded,

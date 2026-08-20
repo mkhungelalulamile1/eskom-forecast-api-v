@@ -1,3 +1,4 @@
+// UNUSED COMPONENT (orphan) — not imported anywhere. [DATA: STATIC-UI] heading text.
 import {
   AutorenewRounded,
   DownloadRounded,

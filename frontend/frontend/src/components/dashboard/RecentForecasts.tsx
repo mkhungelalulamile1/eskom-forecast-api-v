@@ -1,3 +1,5 @@
+// Used ONLY by the unrouted Dashboard page.
+// [DATA: DYNAMIC] rows from forecastService.getForecastResults (/api/scenario-data).
 import {
   useEffect,
   useMemo,

@@ -1,3 +1,4 @@
+// [DATA: none] presentational chip — label/tone passed by caller.
 import React from "react";
 import {
   Chip,

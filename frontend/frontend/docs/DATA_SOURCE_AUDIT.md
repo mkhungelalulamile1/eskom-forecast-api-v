@@ -66,6 +66,20 @@ Filtering is **client-side**: `/api/scenario-data` and `/api/forecast-metrics` r
 
 ## 2. FORECAST PAGE — every element
 
+### 1.9 App shell — visible on BOTH routed pages (`DashboardLayout` + `DashboardHeader` + `DashboardSidebar`)
+
+| Element | Verdict | Notes |
+|---|---|---|
+| Page title “Coal Forecasting” / “Model Performance” + subtitle strip | **STATIC-UI** | fixed per-route strings in `DashboardLayout.pageTitles` |
+| **“System Online” green pill** (header, right) | **MOCK ⚠️** | hardcoded label + tone — it is **not** connected to `/healthz` or any check. Always green even if every API call fails. |
+| “Updated HH:MM” readout | **USER-STATE** | client-side timestamp of the last react-query refetch — not a backend “forecast generated at” time (that doesn’t exist, see F6) |
+| Auto-refresh toggle (5 min) / Refresh-now button | **USER-STATE** | refetches all react-query caches; no direct API of its own |
+| Light/dark mode toggle | USER-STATE | local preference |
+| Sidebar logo, “Coal Stockpile / Forecasting Platform” | STATIC-UI | asset + fixed text |
+| Sidebar nav items “Forecast” / “Model Performance” (+ descriptions) | STATIC-UI | fixed list in `routes/navigation.ts` (Inference Monitoring entry commented out) |
+| Sidebar Settings / Help & Support / Sign out | STATIC-UI (dead) | commented-out code block |
+| Login gate | **MOCK ⚠️** | `ProtectedRoute` hardcodes `isAuthenticated = true` — `/login` is never enforced. `LoginForm` performs an 800 ms **simulated** login and `console.log`s the username **and password**; `auth.service.login()` POSTs `/auth/login`, an endpoint the backend doesn't have (and unused by the form). |
+
 ### 2.0 Forecast Context Bar (sticky, `components/layout/ForecastContextBar.tsx`)
 
 | Element | Verdict | Source of truth |
@@ -138,7 +152,20 @@ Source: ONE query → **`GET /api/scenario-data`**, split client-side: baseline 
 
 ### 2.4 Weather Intelligence (`WeatherIntelligence.tsx`)
 
-Source: `useWeatherSummary` / `useWeatherOutlook` / `useWeatherSignals` → **`GET /api/weather-data?entity_id=…`** (backend: Open-Meteo per-station cache). All numbers (temps, rainfall, wind, UV, humidity, sunshine, weather icon/label, 7/30-day aggregates, rainy/hot-day counts) are **DYNAMIC**. Station tab strip is **DYNAMIC — ENDPOINT MISSING** (uses `/api/entities`). View switch (Current / 7-Day / 30-Day) is USER-STATE. Header text/colours STATIC-UI.
+Source: `useWeatherSummary` / `useWeatherOutlook` / `useWeatherSignals` → **`GET /api/weather-data?entity_id=…`** (backend: Open-Meteo per-station cache). View switch (Current / 7-Day / 30-Day) is USER-STATE; header text/colours STATIC-UI.
+
+Enumerated per view — all values **DYNAMIC**:
+
+| View | Elements (all `GET /api/weather-data`) |
+|---|---|
+| Current | station name in header; weather condition label + icon (from `weather_label`); temperature max/min; rainfall; cloud cover; humidity; wind speed; UV index; sunshine hours; observation date |
+| 7-Day outlook | one card per forecast day: condition + icon, temp max/min, rainfall, wind |
+| 30-Day signals | forecast-day count, average temperature, total rainfall, average wind, average UV, average humidity, rainy days, hot days |
+
+| Also in this card | Verdict |
+|---|---|
+| Station tab strip / station-correction effect | **DYNAMIC — ENDPOINT MISSING** (uses `/api/entities`) — no tabs render |
+| “Loading weather outlook…” / error / empty states | DYNAMIC (react-query states) |
 
 ### 2.5 Stockpile Trajectory (`StockpileTrajectory.tsx`)
 
@@ -147,9 +174,11 @@ Source: `useForecastChart` with `metric=stockpile` (same `/api/scenario-data`; `
 | Element | Verdict |
 |---|---|
 | Area chart of projected stockpile | **DYNAMIC** (`Stockpile` per date) |
+| Title/subtitle + dynamic station label in the header | STATIC-UI template + DYNAMIC station name |
 | Tonnes ⇄ Days-of-Supply toggle | USER-STATE; days = stockpile ÷ mean daily burn (**DYNAMIC**) |
+| Alert chip “{n} projected periods below zero” | **DYNAMIC** count + STATIC-UI wording |
+| “Days of Supply is calculated from…” info note | STATIC-UI |
 | Min/Max markers, negative-period detection, “risk” chip wording | **DYNAMIC** values + STATIC-UI thresholds/wording |
-| Title/subtitle/units | STATIC-UI |
 
 ### 2.6 Forecast Insights (`ForecastInsights.tsx`)
 
@@ -169,7 +198,7 @@ Source: same `/api/scenario-data` records via `useForecastChart`.
 | Element | Verdict | Notes |
 |---|---|---|
 | “Station Fleet” panel — one row per station with avg Burn/Supply bar | **DYNAMIC (fully)** | rows grouped from `/api/scenario-data` `scenario_id="actual"`; **station names come from the data itself**, so this list works despite `/api/entities` missing. Click sets the global station filter. Ranking follows the selected metric (USER-STATE). |
-| Weather Correlation table (Temperature/Rainfall/Wind/Humidity/UV/Sunshine vs Burn/Supply) | **DYNAMIC** | Pearson r computed client-side by joining `/api/scenario-data` and `/api/weather-data` on date. Variable labels STATIC-UI. |
+| Weather Correlation table (Temperature/Rainfall/Wind/Humidity/UV/Sunshine vs Burn/Supply) | **DYNAMIC** | Pearson r computed client-side by joining `/api/scenario-data` and `/api/weather-data` on date. Each cell also shows a **Strong / Moderate / Weak** classification — dynamic r with STATIC-UI cut-offs. Variable labels STATIC-UI. |
 
 ### 2.8 Orphan forecast components (present in code, NOT rendered anywhere)
 
@@ -229,9 +258,11 @@ Source: same **`GET /api/oot-history`**; running sums computed client-side per d
 
 | Element | Verdict |
 |---|---|
+| Title “{Burn/Supply/Stockpile} History — Actual vs Predicted” + subtitle | STATIC-UI template switching on the shared metric filter |
 | Cumulative **Actual** line | **DYNAMIC** (cumsum of `{metric}_actual`) |
 | Cumulative **Predicted** line | **DYNAMIC** (cumsum of `{metric}_predicted`) |
-| Metric-specific title/subtitle | STATIC-UI (switches on the shared metric filter — dynamic text, fixed templates) |
+| Tooltip “Actual”/“Predicted” + values | DYNAMIC |
+| Legend colours / axis formats | STATIC-UI |
 | Empty/loading states | DYNAMIC |
 
 ### 3.4 Model Accuracy Matrix (`ModelAccuracyMatrix.tsx`)
@@ -243,6 +274,7 @@ Source: same **`GET /api/forecast-metrics`**, filtered by horizon + the three mo
 | Station rows (18 in current data) | **DYNAMIC** |
 | Columns Burn / Supply / Stockpile → `Input` / `Replenishment` / `Stockpile` | STATIC-UI header + DYNAMIC `nrmse` values per cell |
 | Status chips (good/warning/poor) | DYNAMIC value + STATIC-UI thresholds |
+| Legend “Good ≤ 25% / Review 25–50% / Attention > 50%” | STATIC-UI (same threshold constants) |
 | “No data / error / loading” states | DYNAMIC |
 
 Note: the `entityId` prop is accepted but unused — the matrix always shows the whole fleet (works even while the station dropdown is broken, as long as the horizon has data).
@@ -260,9 +292,26 @@ Note: the `entityId` prop is accepted but unused — the matrix always shows the
 
 None of these are imported by the routed page; all now carry explicit `[DATA: MOCK]` header comments.
 
-### 3.6 Other routed-but-hidden pages (for completeness)
+### 3.6 Other routed-but-hidden screens (reachable by URL, not in the sidebar)
 
-`/inference` and `/inference-monitoring` exist in the router but are commented out of the sidebar navigation. Their services call the real `GET /api/inference-monitoring[/summary]` endpoints (in-memory backend log — resets on restart). The legacy self-contained dashboard (`frontend/index.html`, the one the current Dockerfile actually ships) calls `/api/forecast-data`, `/api/scenario-data`, `/api/forecast-metrics`, `/api/oot-history`, `/api/weather-data`, `/api/initialize[-progress]` — all dynamic.
+**`/login`** — see §1.9: simulated login, mock gate.
+
+**`/inference`** — mostly MOCK:
+
+| Component | Verdict |
+|---|---|
+| `ApiMetrics.tsx` | **MOCK** — hardcoded “12,540”, “99.2%”, … |
+| `InferenceStatistics.tsx` | **MOCK** — hardcoded “Healthy”, “Running”, … |
+| `PipelineStatus.tsx` | **MOCK** — hardcoded `pipeline` steps array |
+| `ResourceLogs.tsx` | **MOCK** — hardcoded `logs` array |
+| `ErrorMonitor.tsx` | **MOCK** — hardcoded `errors` array |
+| `InferenceHistory.tsx` | **DYNAMIC** — live axios fetch |
+
+**`/inference-monitoring`** — all DYNAMIC: every component is fed by `useInferenceMonitoring()` → `GET /api/inference-monitoring` + `GET /api/inference-monitoring/summary` (health chip, summary counters, latest run, latency chart, recent errors, resource health/activity, run list). Backend keeps these in an **in-memory list that resets on process restart**. `RunForecastButton` POSTs the real **`/api/run-forecast`** action.
+
+**Unrouted dashboard** (`DashboardPage`/`DashboardContent` — dead screen): its panels (`ForecastSummary`, `ForecastTrend`, `RecentForecasts`, `WeatherSummary`, `StationStatus`, `DashboardKPIs`) fetch live data from `/api/scenario-data`, `/api/weather-data` and `/api/inference-monitoring/summary` — dynamic, but unreachable.
+
+The legacy self-contained dashboard (`frontend/index.html`, the one the current Dockerfile actually ships) calls `/api/forecast-data`, `/api/scenario-data`, `/api/forecast-metrics`, `/api/oot-history`, `/api/weather-data`, `/api/initialize[-progress]` — all dynamic.
 
 ---
 
@@ -295,6 +344,10 @@ Average/Peak Forecast, Projected Volume, Forecast Horizon, Average/Peak Burn, Ho
 | **F8** | `/api/forecast-metrics-by-step` exists but nothing in the SPA calls it; `/api/entities` needed but missing; `/api/scenario-data` ships the full 8k+ row payload and filtering happens in the browser. | Fine at current scale; note for future server-side filtering. |
 | **F9** | Outer `frontend/` copy is stale/broken (no Python modules in its `src/`, never built — sourcemaps prove builds came from `frontend/frontend/`). | Confusion risk; either delete it or make it a pure copy again. |
 | **F10** | `console.log` of filter debug output left in `forecast.service.ts`. | Noise in production console. |
+| **F11** | Header “System Online” pill is a hardcoded green label — not wired to `/healthz` or any check. | Users see “System Online” even when every API call is failing. |
+| **F12** | Auth is entirely mock: `ProtectedRoute` hardcodes `isAuthenticated = true`; `LoginForm` simulates login (800 ms) and `console.log`s username **and password**; `auth.service` POSTs `/auth/login` which the backend doesn't expose (and the form doesn't even call it). | No protection; credential logging is a security smell. |
+| **F13** | Hidden `/inference` page is mostly mock (`ApiMetrics`, `InferenceStatistics`, `PipelineStatus`, `ResourceLogs`, `ErrorMonitor`); only `InferenceHistory` is live. | If this page is ever surfaced, five of six panels show fake data. |
+| **F14** | “Updated HH:MM” in the header is the browser-side time of the last react-query refetch. | Can mislead users into thinking forecasts refreshed from source. |
 
 ---
 
@@ -310,8 +363,10 @@ Average/Peak Forecast, Projected Volume, Forecast Horizon, Average/Peak Burn, Ho
 5. Replace `DEFAULT_ENTITY_ID = "entity_1"` with the first station from the data (or `"all"` + add an “All Stations” option — the service-side aggregation for `all` already exists but is currently unreachable from the UI).
 6. Standardise the `actual` scenario label as “Baseline” across the context bar and Scenario Comparison.
 7. Fix monthly units (`tonnes` not `t/day`) and the metric-aware trend-chart title.
-8. Remove the `console.log` in `forecast.service.ts`; delete or clearly fence the orphan/mock components listed in §2.8/§3.5.
+8. Remove the `console.log` in `forecast.service.ts`; delete or clearly fence the orphan/mock components listed in §2.8/§3.5 (and the mock `/inference` panels in §3.6).
 9. Decide the fate of the outer `frontend/` copy (delete recommended — CI ships `index.html` from it, but the SPA work lives in `frontend/frontend/`).
+10. Wire the “System Online” pill to `GET /healthz` (it exists and is cheap) and make “Updated HH:MM” show the backend’s data/forecast timestamp once F6-item 4 lands — or relabel it “Last page refresh”.
+11. Either implement real auth (backend `/api/auth/login` + token in the existing axios interceptor + `ProtectedRoute` reading the Zustand store) or delete the login screen, the dead `/auth/login` service and the credential `console.log`.
 
 ---
 

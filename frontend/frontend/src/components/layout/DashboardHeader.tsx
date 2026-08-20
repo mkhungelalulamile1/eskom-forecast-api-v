@@ -24,18 +24,21 @@ import { formatTime } from "../../utils/format";
 import StatusPill from "../common/StatusPill";
 
 /**
- * =====================================================
- * DASHBOARD HEADER
- * =====================================================
- * Redesigned header. Previously the forecast page had a big
- * "Auto Refresh … Updated 3:01 PM" text row — that is now replaced
- * by a compact, icon-driven control cluster on the right:
+ * DASHBOARD HEADER — renders above BOTH routed pages.
  *
- *  - a refresh button (always available)
- *  - an auto-refresh toggle (icon spins while active)
- *  - a quiet "Updated HH:MM" readout
- *
- * A pulsing green system-status pill confirms live API connectivity.
+ * Element-by-element data sources:
+ *  - Page title + subtitle      [DATA: STATIC-UI] fixed strings per route
+ *                               (see pageTitles in DashboardLayout).
+ *  - "System Online" pill       [DATA: MOCK ⚠️] ALWAYS green — it is a
+ *                              hardcoded label, NOT a /healthz check. Do
+ *                              not read it as real API connectivity.
+ *  - "Updated HH:MM" readout    [DATA: USER-STATE] client-side timestamp
+ *                              of the last react-query refetch — not a
+ *                              backend "forecast generated at" time.
+ *  - Auto-refresh toggle        [DATA: USER-STATE] refetches all queries
+ *                              every 5 min while on.
+ *  - Refresh-now button         [DATA: USER-STATE] queryClient.refetchQueries.
+ *  - Light/dark mode toggle     [DATA: USER-STATE] local theme preference.
  */
 interface DashboardHeaderProps {
   title: string;

@@ -1,3 +1,6 @@
+// Used ONLY by the unrouted Dashboard page (components/dashboard variant —
+// distinct from features/forecast/components/WeatherSummary.tsx).
+// [DATA: DYNAMIC] wraps useWeatherSummary (/api/weather-data).
 import {
   AirRounded,
   OpacityRounded,

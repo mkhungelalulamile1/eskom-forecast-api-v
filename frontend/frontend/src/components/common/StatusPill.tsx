@@ -12,6 +12,9 @@ import { alpha } from "@mui/material/styles";
  */
 export type PillTone = "success" | "warning" | "error" | "info" | "neutral";
 
+// [DATA: STATIC-UI] Pure presentational pill — the LABEL/TONE are always
+// supplied by the caller (e.g. the hardcoded "System Online" in
+// DashboardHeader, which is NOT backed by a health check).
 interface StatusPillProps {
   label: string;
   tone?: PillTone;

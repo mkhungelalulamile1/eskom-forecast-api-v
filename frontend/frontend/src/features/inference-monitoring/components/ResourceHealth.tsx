@@ -1,3 +1,5 @@
+// /inference-monitoring (hidden route). [DATA: DYNAMIC] per-resource health from
+// the live monitoring summary.
 import React from "react";
 
 import {

@@ -1,3 +1,4 @@
+// [DATA: STATIC-UI] pure layout for the login screen — no data.
 import {
   Box,
   Container,

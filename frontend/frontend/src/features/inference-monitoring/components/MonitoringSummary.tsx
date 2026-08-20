@@ -1,3 +1,5 @@
+// /inference-monitoring (hidden route). [DATA: DYNAMIC] all values arrive as props
+// from useInferenceMonitoring() (/api/inference-monitoring/summary).
 import React from "react";
 
 import {

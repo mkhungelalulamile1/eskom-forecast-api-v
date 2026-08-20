@@ -1,3 +1,5 @@
+// /inference-monitoring (hidden route). [DATA: DYNAMIC] durations from the live
+// monitoring summary events.
 import React, { useMemo } from "react";
 
 import {

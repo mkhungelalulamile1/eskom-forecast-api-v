@@ -844,7 +844,8 @@ const StockpileTrajectory = ({
               </Typography>
             </Box>
 
-            {/* Risk */}
+            {/* [DATA: DYNAMIC] Risk chip — count of negative projected
+                periods from the API series (threshold wording STATIC-UI). */}
 
             <Box sx={{ minWidth: 0 }}>
               <Stack

@@ -1,3 +1,4 @@
+// [DATA: STATIC-UI] Presentational card container (title/subtitle passed by caller).
 import React from "react";
 import {
   Box,
