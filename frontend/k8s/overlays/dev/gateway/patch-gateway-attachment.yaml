@@ -1,0 +1,46 @@
+# Attaches to gateway (namespace nginx-gateway) -- the only Gateway
+# NGF's static mode allows on this cluster, see the postmortem comment in
+# k8s/base/gateway/gateway.yaml. Its owner added the two listeners this
+# depends on (http+https for csm-dev.digi-incubator.co.za), named
+# csm-dev-http/csm-dev-https -- managed in the cluster-gateway repo.
+#
+# sectionName is mandatory on both parentRefs (2026-07-26 incident: without
+# it, this route also attached to kibana-http/-https since those listeners
+# likewise allow routes from any namespace, and won the tie-break against
+# kibana's own route -- see the postmortem in k8s/base/gateway/gateway.yaml).
+# hostnames is defense-in-depth for the same reason.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: coalstockpile-routes
+spec:
+  parentRefs:
+    - name: gateway
+      namespace: nginx-gateway
+      sectionName: csm-dev-http
+    - name: gateway
+      namespace: nginx-gateway
+      sectionName: csm-dev-https
+  hostnames:
+    - csm-dev.digi-incubator.co.za
+---
+# Grants the gateway's https listener permission to reference our TLS
+# Secret across namespaces -- Gateway API requires this for any
+# cross-namespace certificateRefs. Cert signed by Eskom's internal CA,
+# valid 2026-07-24 to 2028-07-24; loaded via a one-time `kubectl create
+# secret tls` (see docs/RUNBOOK.md) -- not sourced from Key Vault like this
+# repo's other secrets, since that needs the same Key Vault role-assignment
+# escalation already noted there.
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-gateway-tls-secret
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      namespace: nginx-gateway
+  to:
+    - group: ""
+      kind: Secret
+      name: csm-dev-tls-secret

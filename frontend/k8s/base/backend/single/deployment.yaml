@@ -1,0 +1,114 @@
+# dev's single-instance backend Deployment -- plain in-place rolling update,
+# no blue/green here (see docs/ARCHITECTURE.md for why dev is scoped simpler
+# than qa/prod).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eskom-forecast-api
+  labels:
+    app: eskom-forecast-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eskom-forecast-api
+  template:
+    metadata:
+      labels:
+        app: eskom-forecast-api
+        # Required for the Workload Identity webhook to inject the federated
+        # token + AZURE_CLIENT_ID; the SA annotation alone is not enough.
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: eskom-forecast-sa
+      automountServiceAccountToken: false
+      # Matches the Dockerfile's `USER appuser` (uid/gid 10001) -- both layers
+      # matter (see the comment there); this is what Trivy's KSV-0118 checks
+      # for (a container able to run as root because nothing said otherwise).
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: incubator
+          # Placeholder, retargeted by every overlay's `images:` transformer
+          # (kustomize edit set image in the deploy pipeline for the real tag).
+          image: PLACEHOLDER_ACR_NAME.azurecr.io/eskom-forecast-api:PLACEHOLDER_TAG
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              # 512Mi OOMKilled the pod (confirmed live, exit 137,
+              # lastState.terminated.reason: OOMKilled) running
+              # _scheduled_ingest_and_forecast() -- the exact function this
+              # app's own cron job runs in-process, in this same pod, daily
+              # at 02:00 UTC. Bronze data + a full historical weather cache
+              # for all 18 stations + XGBoost training/inference for both
+              # horizons, all in one process alongside the live web server,
+              # needs real headroom.
+              memory: 1Gi
+          envFrom:
+            - configMapRef:
+                name: coalstockpile-config
+            - secretRef:
+                name: coalstockpile-secrets
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          volumeMounts:
+            # Not read directly (SQL_USERNAME/SQL_PASSWORD come in via envFrom
+            # from the native Secret the CSI driver syncs below) -- mounting
+            # the SecretProviderClass here is what makes the CSI driver do
+            # that sync in the first place; see secretproviderclass.yaml.
+            - name: secrets-store
+              mountPath: /mnt/secrets-store
+              readOnly: true
+            # readOnlyRootFilesystem needs these three writable regardless:
+            # /tmp for general Python/library temp use, and /app/data +
+            # /app/models because config.py's local-fallback paths
+            # (data/bronze, data/gold, data/metrics, data/weather, models/)
+            # are relative to the container's CWD -- these get written to
+            # even in AKS whenever Storage doesn't yet have the blob being
+            # requested (e.g. first run before any real ingestion), not just
+            # when Storage is entirely unconfigured. See app.py's
+            # fetch_data_from_bronze_storage() fallback-to-local-mock-data path.
+            - name: tmp
+              mountPath: /tmp
+            - name: app-data
+              mountPath: /app/data
+            - name: app-models
+              mountPath: /app/models
+      volumes:
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: coalstockpile-kv-secrets
+        - name: tmp
+          emptyDir: {}
+        - name: app-data
+          emptyDir: {}
+        - name: app-models
+          emptyDir: {}

@@ -1,0 +1,20 @@
+# ClusterIP -- the Gateway (k8s/base/gateway) is the single entry point into
+# this app; this Service only needs to be reachable from the Gateway's data
+# plane and from within the cluster, not given its own Azure LoadBalancer.
+# `color: blue` is the initial active color for a fresh environment;
+# cutover-stage.yml flips this selector between blue/green on every release.
+apiVersion: v1
+kind: Service
+metadata:
+  name: coalstockpilefrontend
+spec:
+  type: ClusterIP
+  selector:
+    app: coalstockpilefrontend
+    color: blue
+  ports:
+    - name: http
+      port: 80
+      # 8080: the container listens there, not 80 -- it runs as a non-root
+      # user that can't bind a privileged port. See nginx.conf/Dockerfile.
+      targetPort: 8080

@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: app-coal-stockpile-prod
+labels:
+  - pairs:
+      env: prod
+    includeSelectors: true
+resources:
+  - namespace.yaml
+  - ../../../base/backend/shared
+  - configmap.yaml
+  - blue
+  - green
+patches:
+  - path: patch-serviceaccount.yaml
+  - path: patch-secretproviderclass.yaml
+# No images: transformer here on purpose -- see the same comment in
+# overlays/qa/backend/kustomization.yaml.

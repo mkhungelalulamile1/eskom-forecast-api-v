@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: app-coal-stockpile
+labels:
+  - pairs:
+      env: dev
+    includeSelectors: true
+resources:
+  - ../../../base/frontend/single
+  - namespace.yaml
+# Deploy pipeline overrides this with the git-sha-tagged image it just built:
+# `kustomize edit set image PLACEHOLDER_ACR_NAME.azurecr.io/coalstockpilefrontend=<acr>.azurecr.io/coalstockpilefrontend:<tag>`
+images:
+  - name: PLACEHOLDER_ACR_NAME.azurecr.io/coalstockpilefrontend
+    newName: mazacrsandtinonprod.azurecr.io/coalstockpilefrontend
+    newTag: v1

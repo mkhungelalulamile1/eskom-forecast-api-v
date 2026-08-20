@@ -1,0 +1,89 @@
+# dev's single-instance frontend Deployment -- plain in-place rolling update.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coalstockpilefrontend
+  labels:
+    app: coalstockpilefrontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: coalstockpilefrontend
+  template:
+    metadata:
+      labels:
+        app: coalstockpilefrontend
+    spec:
+      automountServiceAccountToken: false
+      # Matches the Dockerfile's `USER nginx` (uid/gid 101, nginx:alpine's
+      # built-in user) -- both layers matter (see the comment there); this is
+      # what Trivy's KSV-0118 checks for (a container able to run as root
+      # because nothing said otherwise).
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        # emptyDir volumes below are owned by root by default; fsGroup makes
+        # them group-writable for uid 101 instead of an in-image chown (which
+        # would be moot anyway -- readOnlyRootFilesystem means the volume
+        # mount replaces whatever ownership was baked into the image at that
+        # path). See Dockerfile for the fuller explanation.
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: frontend
+          # Placeholder, retargeted by every overlay's `images:` transformer
+          # (kustomize edit set image in the deploy pipeline for the real tag).
+          image: PLACEHOLDER_ACR_NAME.azurecr.io/coalstockpilefrontend:PLACEHOLDER_TAG
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            # 8080, not 80 -- uid 101 can't bind a privileged port. See
+            # nginx.conf and Dockerfile; the Service in front still exposes
+            # port 80 externally (see ../shared/service.yaml).
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "128Mi"
+          volumeMounts:
+            # The only paths nginx writes to at runtime -- confirmed against
+            # the actual image (docker run nginx:1.27-alpine ...), not
+            # assumed: nginx.pid lives under /run, client/proxy/fastcgi temp
+            # dirs under /var/cache/nginx (nginx -V), and /tmp is where
+            # docker-entrypoint.d/10-resolver.sh writes resolver.conf
+            # (deliberately not /etc/nginx/conf.d -- see that script).
+            - name: tmp
+              mountPath: /tmp
+            - name: var-cache-nginx
+              mountPath: /var/cache/nginx
+            - name: var-run
+              mountPath: /run
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: var-cache-nginx
+          emptyDir: {}
+        - name: var-run
+          emptyDir: {}
