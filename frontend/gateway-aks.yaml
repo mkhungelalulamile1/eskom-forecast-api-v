@@ -1,0 +1,70 @@
+# NGINX Gateway Fabric — Gateway + HTTPRoute for the Eskom coal stockpile app.
+#
+# Adapted for THIS repo's deployment:
+#   - Frontend Service: coalstockpilefrontend :80  (frontend/frontend-aks.yaml, nginx)
+#   - Backend  Service: eskom-forecast-api    :80  (k8s/data_backend-aks.yaml, FastAPI)
+#   both in namespace app-coal-stockpile.
+#
+# Routing model: the API-owned paths go straight to the backend; everything else
+# is the static dashboard served by the nginx frontend. (The frontend nginx also
+# reverse-proxies /api as a fallback for callers that hit the frontend Service
+# directly — see frontend/nginx.conf — so both paths reach the backend.)
+#
+# Prereqs (unchanged from the reference runbook):
+#   - Gateway API CRDs installed
+#   - NGF control plane installed via Helm in namespace nginx-gateway
+#   - Static public IP pip-gateway-dev exists in rg-stockpile-dev
+#
+# Access is locked to a single source IP at the NSG layer.
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: stockpile-gateway
+  namespace: app-coal-stockpile
+spec:
+  gatewayClassName: nginx
+  listeners:
+  - name: http
+    port: 80
+    protocol: HTTP
+    allowedRoutes:
+      namespaces:
+        from: Same
+  infrastructure:
+    annotations:
+      # Bind the NGF data-plane LoadBalancer to the pre-created static IP.
+      service.beta.kubernetes.io/azure-load-balancer-resource-group: rg-stockpile-dev
+      service.beta.kubernetes.io/azure-pip-name: pip-gateway-dev
+      # Lock the LoadBalancer down to a single source IP at the NSG layer.
+      # Do NOT also set spec.loadBalancerSourceRanges — combining the two errors out.
+      service.beta.kubernetes.io/azure-allowed-ip-ranges: 0.0.0.0/0
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: coalstockpile-routes
+  namespace: app-coal-stockpile
+spec:
+  parentRefs:
+  - name: stockpile-gateway
+  rules:
+  # Paths owned by the FastAPI backend (see main.py). Gateway API matches
+  # longest-prefix-first, so these win over "/":
+  #   /api           — all dashboard data endpoints (/api/forecast-data, …)
+  #   /healthz       — backend health probe
+  #   /docs, /openapi.json — FastAPI interactive docs / OpenAPI schema
+  - matches:
+    - path: { type: PathPrefix, value: /api }
+    - path: { type: PathPrefix, value: /healthz }
+    - path: { type: PathPrefix, value: /docs }
+    - path: { type: PathPrefix, value: /openapi.json }
+    backendRefs:
+    - name: eskom-forecast-api
+      port: 80
+  # Everything else is the static dashboard served by the nginx frontend.
+  - matches:
+    - path: { type: PathPrefix, value: / }
+    backendRefs:
+    - name: coalstockpilefrontend
+      port: 80

@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coalstockpilefrontend
+  namespace: app-coal-stockpile
+  labels:
+    app: coalstockpilefrontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: coalstockpilefrontend
+  template:
+    metadata:
+      labels:
+        app: coalstockpilefrontend
+    spec:
+      containers:
+        - name: frontend
+          # Tag is substituted at deploy time by the KubernetesManifest task
+          # (see azure-pipelines-Frontend.yml `containers:` input).
+          image: acrstockpiledev.azurecr.io/coalstockpilefrontend:latest
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "250m"
+              memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coalstockpilefrontend
+  namespace: app-coal-stockpile
+spec:
+  # External LoadBalancer so the dashboard is reachable from outside the
+  # cluster. The backend Service stays internal-only (see data_backend-aks.yaml);
+  # the browser reaches it exclusively through this frontend's /api reverse proxy.
+  type: LoadBalancer
+  selector:
+    app: coalstockpilefrontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
